@@ -4,7 +4,7 @@
 """
 
 import numpy as np
-from typing import Tuple, Optional
+from typing import Tuple
 
 
 def apply_physical_constraints(
