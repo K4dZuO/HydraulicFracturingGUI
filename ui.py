@@ -92,7 +92,7 @@ class Ui_mainWindow(object):
     def retranslateUi(self, mainWindow):
         mainWindow.setWindowTitle(QCoreApplication.translate("mainWindow", "MainWindow", None))
         self.params_label.setText(QCoreApplication.translate("mainWindow", "Параметры", None))
-        self.load_template_button.setText(QCoreApplication.translate("mainWindow", "Загрузить .csv шаблон", None))
+        self.load_template_button.setText(QCoreApplication.translate("mainWindow", "Загрузить csv/pq шаблон", None))
         self.w_label.setText(QCoreApplication.translate("mainWindow", "Длина трещины W, м", None))
         self.thickness_label.setText(QCoreApplication.translate("mainWindow", "Толщина пласта h, м", None))
         self.skin_label.setText(QCoreApplication.translate("mainWindow", "Skin", None))

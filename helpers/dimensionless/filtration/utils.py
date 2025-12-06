@@ -44,42 +44,6 @@ def compute_snr(signal: np.ndarray, noise_estimate: Optional[np.ndarray] = None)
     return float(snr_db)
 
 
-def compute_derivative_variance(signal: np.ndarray, x: Optional[np.ndarray] = None) -> float:
-    """
-    Вычисляет дисперсию первой производной сигнала.
-    Используется для оценки гладкости кривой.
-    
-    Args:
-        signal: Входной сигнал
-        x: Координаты (если None, используется равномерная сетка)
-    
-    Returns:
-        Дисперсия производной
-    """
-    signal = np.asarray(signal)
-    valid_mask = np.isfinite(signal)
-    
-    if not np.any(valid_mask) or np.sum(valid_mask) < 2:
-        return 0.0
-    
-    signal_clean = signal[valid_mask]
-    
-    if x is not None:
-        x_clean = np.asarray(x)[valid_mask]
-        if len(x_clean) < 2:
-            return 0.0
-        derivative = np.gradient(signal_clean, x_clean)
-    else:
-        derivative = np.gradient(signal_clean)
-    
-    derivative = derivative[np.isfinite(derivative)]
-    
-    if len(derivative) == 0:
-        return 0.0
-    
-    return float(np.var(derivative))
-
-
 def compute_oscillation_score(signal: np.ndarray, x: Optional[np.ndarray] = None) -> float:
     """
     Вычисляет оценку осцилляций в сигнале.
@@ -215,7 +179,6 @@ def select_filter_method(
     # Вычисляем характеристики
     snr = compute_snr(signal_clean)
     oscillation_score = compute_oscillation_score(signal_clean, x[valid_mask] if x is not None else None)
-    derivative_var = compute_derivative_variance(signal_clean, x[valid_mask] if x is not None else None)
     use_log = detect_log_scale(signal_clean)
     
     # Логика выбора

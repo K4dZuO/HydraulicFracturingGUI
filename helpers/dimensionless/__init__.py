@@ -4,13 +4,11 @@
 """
 
 from .filtration import (
-    UnifiedInterpolator,
     SignalFilters,
     PhysicsConstraints
 )
 
 __all__ = [
-    'UnifiedInterpolator',
     'SignalFilters',
     'PhysicsConstraints'
 ]

@@ -7,7 +7,7 @@ import numpy as np
 from typing import Tuple, Optional
 from sklearn.base import BaseEstimator
 
-from .physics_constraints import apply_physical_constraints, validate_extrapolation
+from .physics_constraints import apply_physical_constraints
 
 
 def extrapolate_parameters(

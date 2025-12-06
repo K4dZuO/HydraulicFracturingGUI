@@ -221,30 +221,6 @@ def analyze_well_groups(df: pd.DataFrame) -> Dict[str, any]:
     return analysis
 
 
-def parse_well_data_row(row: pd.Series) -> Optional[WellData]:
-    """
-    Парсит одну строку данных в объект WellData.
-    """
-    try:
-        return WellData(
-            skin=float(row['Skin']),
-            h=float(row['h']),
-            n=int(row['N']),
-            w=float(row['W']),
-            l=float(row['L']),
-            a_l=float(row['a/L']),
-            elem_idx=int(row['ElemIdx']),
-            x=float(row['X']),
-            y=float(row['Y']),
-            t=float(row['t']),
-            p=float(row['P']),
-            dp=float(row['dP']),
-            q=float(row['Q'])
-        )
-    except Exception:
-        return None
-
-
 def validate_well_data(df: pd.DataFrame) -> Tuple[bool, Optional[str]]:
     """
     Валидирует данные скважины на корректность.

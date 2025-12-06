@@ -588,35 +588,6 @@ class DimensionlessCurveInterpolator:
             "max_second_derivative": float(max_dd),
         }
 
-    # ---------------------------
-    # 📊 ВИЗУАЛИЗАЦИЯ (для GUI)
-    # ---------------------------
-
-    def visualize_prediction(self, plot_widget, Y_true, P_true, Y_pred, P_pred):
-        """Визуализация сравнения интерполяции в PyQtGraph."""
-        import pyqtgraph as pg
-
-        plot_widget.clear()
-
-        # Истинные значения — серые точки
-        plot_widget.plot(
-            Y_true, P_true, pen=None, symbol='o', symbolBrush=(150, 150, 150), symbolSize=6,
-            name='Эталонные точки'
-        )
-
-        # Интерполированные значения — красная линия + маркеры
-        plot_widget.plot(
-            Y_pred, P_pred, pen=pg.mkPen(color=(255, 0, 0), width=2),
-            symbol='t', symbolBrush=(255, 0, 0), symbolSize=8,
-            name=f'Интерполяция ({self.best_method}, RMSE={self.rmse_scores[self.best_method]:.4f})'
-        )
-
-        plot_widget.setLogMode(True, True)
-        plot_widget.showGrid(x=True, y=True)
-        plot_widget.setLabel('bottom', 'Y (безразмерный ёмкостной параметр)')
-        plot_widget.setLabel('left', 'P_D (безразмерное давление)')
-        plot_widget.setTitle('Сравнение интерполяции безразмерной кривой')
-
 
     def compare_with_reference(self, Y_pred: np.ndarray, P_pred: np.ndarray,
                                Y_ref: np.ndarray, P_ref: np.ndarray, 

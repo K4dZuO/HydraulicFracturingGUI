@@ -162,65 +162,6 @@ class MLFilter:
         return pd.Series(filtered_values, index=values.index, name=f'filtered_{self.method}')
 
 
-class AdvancedInterpolator:
-    """Продвинутый интерполятор с различными методами"""
-    
-    @staticmethod
-    def spline_interpolation(time: pd.Series, values: pd.Series, 
-                           new_time: pd.Series, method: str = 'cubic') -> pd.Series:
-        """Сплайн-интерполяция"""
-        # Очищаем данные
-        valid_mask = ~(pd.isna(time) | pd.isna(values))
-        time_clean = time[valid_mask]
-        values_clean = values[valid_mask]
-        
-        if len(time_clean) < 2:
-            return pd.Series(index=new_time.index, dtype=float)
-        
-        try:
-            if method == 'cubic':
-                spline = UnivariateSpline(time_clean, values_clean, s=0)
-            else:
-                spline = interp1d(time_clean, values_clean, kind=method, 
-                                bounds_error=False, fill_value='extrapolate')
-            
-            interpolated = spline(new_time)
-            return pd.Series(interpolated, index=new_time.index, name=f'spline_{method}')
-        except Exception:
-            # Fallback к линейной интерполяции
-            return pd.Series(np.interp(new_time, time_clean, values_clean), 
-                           index=new_time.index, name='linear_fallback')
-    
-    @staticmethod
-    def fourier_interpolation(time: pd.Series, values: pd.Series, 
-                            new_time: pd.Series, n_harmonics: int = 10) -> pd.Series:
-        """Интерполяция на основе преобразования Фурье"""
-        valid_mask = ~(pd.isna(time) | pd.isna(values))
-        time_clean = time[valid_mask]
-        values_clean = values[valid_mask]
-        
-        if len(time_clean) < 4:
-            return pd.Series(index=new_time.index, dtype=float)
-        
-        try:
-            # Вычисляем FFT
-            fft = np.fft.fft(values_clean)
-            freqs = np.fft.fftfreq(len(values_clean))
-            
-            # Оставляем только низкочастотные компоненты
-            fft[n_harmonics:] = 0
-            fft[-n_harmonics:] = 0
-            
-            # Обратное преобразование
-            reconstructed = np.fft.ifft(fft).real
-            
-            # Интерполируем на новые временные точки
-            interpolated = np.interp(new_time, time_clean, reconstructed)
-            return pd.Series(interpolated, index=new_time.index, name='fourier_interp')
-        except Exception:
-            return pd.Series(index=new_time.index, dtype=float)
-
-
 def apply_ml_interpolation(time: pd.Series, values: pd.Series, 
                           method: str = 'random_forest') -> pd.Series:
     """Применение ML-интерполяции к данным"""
