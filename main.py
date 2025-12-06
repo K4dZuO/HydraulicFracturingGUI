@@ -1611,42 +1611,6 @@ class MyApp(QMainWindow, Ui_mainWindow):
         except Exception as e:
             self.show_warning("Ошибка", f"Ошибка обнаружения выбросов: {str(e)}")
     
-    def plot_outliers_with_highlight(self, outliers: pd.Series, plot_type: str) -> None:
-        """Построение графика с выделенными выбросами"""
-        self.plot_widget.clear()
-        
-        if plot_type == "Давление vs Время":
-            # Обычные точки
-            normal_mask = ~outliers
-            self.plot_widget.plot(self.current_data.pressure[normal_mask],
-                                self.current_data.time[normal_mask],
-                                pen='b', symbol='o', symbolSize=5)
-            
-            # Выбросы
-            if outliers.any():
-                self.plot_widget.plot(self.current_data.pressure[outliers],
-                                    self.current_data.time[outliers],
-                                    pen=None, symbol='x', symbolSize=10, symbolBrush='r')
-            
-            self.plot_widget.setLabel('bottom', 'Давление, атм')
-            self.plot_widget.setLabel('left', 'Время, ч')
-            self.plot_widget.setTitle('Давление vs Время (красные X - выбросы)')
-            
-        else:  # Дебит vs Время
-            normal_mask = ~outliers
-            self.plot_widget.plot(self.current_data.flow_rate[normal_mask],
-                                self.current_data.time[normal_mask],
-                                pen='g', symbol='s', symbolSize=5)
-            
-            if outliers.any():
-                self.plot_widget.plot(self.current_data.flow_rate[outliers],
-                                    self.current_data.time[outliers],
-                                    pen=None, symbol='x', symbolSize=10, symbolBrush='r')
-            
-            self.plot_widget.setLabel('bottom', 'Дебит, м³/сут')
-            self.plot_widget.setLabel('left', 'Время, ч')
-            self.plot_widget.setTitle('Дебит vs Время (красные X - выбросы)')
-    
     def on_export_data(self) -> None:
         """Экспорт данных"""
         if self.current_data is None:

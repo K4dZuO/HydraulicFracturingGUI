@@ -408,31 +408,6 @@ class DimensionlessCurveInterpolator1D:
             return np.interp(xt, self._x, self._y)
         return self._spline(xt)
 
-def resample_dimensionless_series(dimensionless: DimensionlessParameters,
-                                  n_points: int = 64,
-                                  smooth: bool = True) -> Dict[str, np.ndarray]:
-    """Ресэмплинг pD(Y), qD(Y) на равномерной сетке по log10(Y).
-
-    Возвращает словарь с ключами: Y_new, pD_new, qD_new.
-    """
-    series = get_dimensionless_series(dimensionless)
-    Y = series["Y"]
-    pD = series["pD"]
-    qD = series["qD"]
-    y_min, y_max = np.nanmin(Y), np.nanmax(Y)
-    if not np.isfinite(y_min) or not np.isfinite(y_max) or y_min <= 0 or y_min == y_max:
-        return {"Y_new": Y, "pD_new": pD, "qD_new": qD}
-    log_grid = np.linspace(np.log10(y_min), np.log10(y_max), n_points)
-    Y_new = 10 ** log_grid
-    interp_p = DimensionlessCurveInterpolator1D(use_logY=True, apply_savgol=smooth)
-    interp_q = DimensionlessCurveInterpolator1D(use_logY=True, apply_savgol=smooth)
-    interp_p.fit(Y, pD)
-    interp_q.fit(Y, qD)
-    pD_new = interp_p.predict(Y_new)
-    qD_new = interp_q.predict(Y_new)
-    return {"Y_new": Y_new, "pD_new": pD_new, "qD_new": qD_new}
-
-
 class PhysicsConstrainedDimensionlessInterpolator:
     """Физически ограниченная интерполяция для безразмерных кривых"""
     

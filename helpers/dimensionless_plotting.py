@@ -13,9 +13,7 @@ from pyqtgraph import PlotWidget, mkPen, mkBrush
 from helpers.dimensionless_analysis import (
     DimensionlessParameters, 
     convert_to_dimensionless_curves,
-    interpolate_dimensionless_curves,
     extrapolate_dimensionless_curves,
-    create_dimensionless_type_curves
 )
 
 # DimensionlessPreprocessor больше не используется - используем напрямую dim_data.X и dim_data.Y
@@ -631,51 +629,6 @@ class DimensionlessPlotter:
         ax.grid(True, alpha=0.3)
         
         return fig
-
-
-class PyQtGraphDimensionlessPlotter:
-    """Класс для построения графиков с использованием PyQtGraph"""
-    def __init__(self):
-        self.colors = {
-            'original': (0, 0, 255, 180),
-            'interpolated': (255, 165, 0, 180),
-            'extrapolated': (128, 0, 128, 180)
-        }
-    
-    def create_dimensionless_plot(self, plot_widget: PlotWidget,
-                                 dimensionless_data: DimensionlessParameters,
-                                 plot_type: str = 'pressure') -> None:
-        """Создание безразмерного графика в PyQtGraph"""
-        plot_widget.clear()
-        plot_widget.setLabel('bottom', 'X (безразмерный фильтрационный параметр)')
-        plot_widget.setLabel('left', 'Y (безразмерный ёмкостной параметр)')
-        plot_widget.setTitle('Безразмерные кривые МГРП')
-        plot_widget.setLogMode(x=False, y=False)
-        
-        try:
-            pD = dimensionless_data.pressure / dimensionless_data.delta_p_i if dimensionless_data.delta_p_i != 0 else np.zeros_like(dimensionless_data.pressure)
-            qD = dimensionless_data.flow_rate / (dimensionless_data.Q if dimensionless_data.Q != 0 else 1.0)
-            values = pD if plot_type == 'pressure' else qD
-            
-            vmin, vmax = np.nanmin(values), np.nanmax(values)
-            if not np.isfinite(vmin) or not np.isfinite(vmax) or vmin == vmax:
-                vmin, vmax = 0.0, 1.0
-            
-            cmap = pg.colormap.get('CET-L4') if hasattr(pg, 'colormap') else None
-            brushes = None
-            if cmap is not None:
-                colors = cmap.map((values - vmin) / (vmax - vmin), mode='qcolor')
-                brushes = colors
-            
-            spots = [{"pos": (float(x), float(y)), "brush": (brushes[i] if brushes is not None else (0, 0, 255, 180)), "size": 7} 
-                     for i, (x, y) in enumerate(zip(dimensionless_data.X, dimensionless_data.Y))]
-            scatter = pg.ScatterPlotItem()
-            scatter.addPoints(spots)
-            plot_widget.addItem(scatter)
-        except Exception:
-            plot_widget.plot(dimensionless_data.X, dimensionless_data.Y, 
-                           pen=mkPen(color=self.colors['original'], width=2), 
-                           name='Траектория')
 
 
 # Функции для удобного использования
