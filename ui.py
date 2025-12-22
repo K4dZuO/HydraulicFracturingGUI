@@ -16,8 +16,7 @@ from PySide6.QtGui import (QBrush, QColor, QConicalGradient, QCursor,
     QImage, QKeySequence, QLinearGradient, QPainter,
     QPalette, QPixmap, QRadialGradient, QTransform)
 from PySide6.QtWidgets import (QApplication, QDoubleSpinBox, QSpinBox, QLabel, QMainWindow,
-    QMenuBar, QPushButton, QSizePolicy, QStatusBar,
-    QWidget)
+    QMenuBar, QPushButton, QSizePolicy, QStatusBar, QGroupBox, QVBoxLayout, QTextEdit, QWidget, QGridLayout)
 
 class Ui_mainWindow(object):
     def setupUi(self, mainWindow):
@@ -87,6 +86,45 @@ class Ui_mainWindow(object):
         self.retranslateUi(mainWindow)
 
         QMetaObject.connectSlotsByName(mainWindow)
+        
+        # Добавляем отчёт в centralwidget под параметрами (вне вкладок)
+        report_group = QGroupBox("Отчёт", self.centralwidget)
+        report_group.setGeometry(20, 330, 300, 300)  # Под параметрами (последний на y=300)
+        report_layout = QVBoxLayout(report_group)
+        self.text_report = QTextEdit(report_group)
+        self.text_report.setReadOnly(True)
+        self.text_report.setPlaceholderText("Здесь появится отчёт...")
+        self.text_report.setMinimumHeight(150)
+        self.text_report.setMaximumHeight(500)
+        report_layout.addWidget(self.text_report)
+        
+        # --- Управление моделью аппроксимации ---
+        self.approx_model_group = QGroupBox("Модель аппроксимации", self.centralwidget)
+        self.approx_model_group.setGeometry(20, 640, 300, 100)
+        self.approx_model_layout = QGridLayout(self.approx_model_group)
+        self.approx_train_model_btn = QPushButton("Обучить модель")
+        self.approx_save_model_btn = QPushButton("Сохранить модель")
+        self.approx_load_model_btn = QPushButton("Загрузить модель")
+        self.approx_model_status_label = QLabel("Модель не обучена")
+        self.approx_model_layout.addWidget(self.approx_train_model_btn, 0, 0)
+        self.approx_model_layout.addWidget(self.approx_save_model_btn, 0, 1)
+        self.approx_model_layout.addWidget(self.approx_load_model_btn, 1, 0)
+        self.approx_model_layout.addWidget(self.approx_model_status_label, 1, 1)
+        
+        # --- Управление моделью интерполяции ---
+        # (добавлена Максом, убрать коммент при слиянии в dev)
+        self.interpolar_model_group = QGroupBox("Модель интерполяции", self.centralwidget)
+        self.interpolar_model_group.setGeometry(20, 750, 300, 100)
+        self.interpolar_model_layout = QGridLayout(self.interpolar_model_group)
+        self.interpolar_train_model_btn = QPushButton("Обучить модель")
+        self.interpolar_save_model_btn = QPushButton("Сохранить модель")
+        self.interpolar_load_model_btn = QPushButton("Загрузить модель")
+        self.interpolar_model_status_label = QLabel("Модель не обучена")
+        self.interpolar_model_layout.addWidget(self.interpolar_train_model_btn, 0, 0)
+        self.interpolar_model_layout.addWidget(self.interpolar_save_model_btn, 0, 1)
+        self.interpolar_model_layout.addWidget(self.interpolar_load_model_btn, 1, 0)
+        self.interpolar_model_layout.addWidget(self.interpolar_model_status_label, 1, 1)
+        
     # setupUi
 
     def retranslateUi(self, mainWindow):

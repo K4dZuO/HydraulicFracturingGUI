@@ -82,17 +82,6 @@ class MyApp(QMainWindow, Ui_mainWindow):
         # Создаем  интерфейс с вкладками
         setup_interface(self)
         
-        # Добавляем отчёт в centralwidget под параметрами (вне вкладок)
-        report_group = QGroupBox("Отчёт", self.centralwidget)
-        report_group.setGeometry(20, 330, 300, 400)  # Под параметрами (последний на y=300)
-        report_layout = QVBoxLayout(report_group)
-        self.text_report = QTextEdit(report_group)
-        self.text_report.setReadOnly(True)
-        self.text_report.setPlaceholderText("Здесь появится отчёт...")
-        self.text_report.setMinimumHeight(150)
-        self.text_report.setMaximumHeight(500)
-        report_layout.addWidget(self.text_report)
-        
         # Настраиваем обработчики событий
         self.setup_event_handlers()
     
@@ -1306,6 +1295,9 @@ class MyApp(QMainWindow, Ui_mainWindow):
         
         return report
     
+    def i_in_main(self):
+            print("Я в main! Замени меня, а после удали!")
+            
     def setup_event_handlers(self) -> None:
         """Настройка обработчиков событий"""
         # Временные ряды
@@ -1318,10 +1310,17 @@ class MyApp(QMainWindow, Ui_mainWindow):
         self.extrapolate_btn.clicked.connect(self.on_extrapolate_xy)
         self.fit_xy_btn.clicked.connect(self.on_fit_xy_curve)
         
-        # Управление моделью интерполяции
-        self.train_model_btn.clicked.connect(self.on_train_interpolator)
-        self.save_model_btn.clicked.connect(self.on_save_interpolator)
-        self.load_model_btn.clicked.connect(self.on_load_interpolator)
+        # Управление моделью апроксимации (оригинальный кусок)
+        self.approx_train_model_btn.clicked.connect(self.on_train_interpolator)
+        self.approx_save_model_btn.clicked.connect(self.on_save_interpolator)
+        self.approx_load_model_btn.clicked.connect(self.on_load_interpolator)
+        
+        # Управление моделью интерполяции (добавленный Максимом кусок)
+        
+        self.interpolar_train_model_btn.clicked.connect(self.i_in_main)
+        self.interpolar_save_model_btn.clicked.connect(self.i_in_main)
+        self.interpolar_load_model_btn.clicked.connect(self.i_in_main)
+        
         
         # Кнопка сброса графиков
         self.reset_plots_btn.clicked.connect(self.on_reset_plots)

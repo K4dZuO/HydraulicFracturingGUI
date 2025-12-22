@@ -64,19 +64,7 @@ def setup_timeseries_tab(app: 'MyApp') -> QWidget:
     app.load_validation_button = QPushButton("Загрузить файл для проверки")
     load_layout.addWidget(app.load_validation_button, 0, 0)
     left_layout.addWidget(load_group)
-    
-    # --- Управление моделью аппроксимации ---
-    model_group = QGroupBox("Модель аппроксимации")
-    model_layout = QGridLayout(model_group)
-    app.train_model_btn = QPushButton("Обучить модель")
-    app.save_model_btn = QPushButton("Сохранить модель")
-    app.load_model_btn = QPushButton("Загрузить модель")
-    app.model_status_label = QLabel("Модель не обучена")
-    model_layout.addWidget(app.train_model_btn, 0, 0)
-    model_layout.addWidget(app.save_model_btn, 0, 1)
-    model_layout.addWidget(app.load_model_btn, 1, 0)
-    model_layout.addWidget(app.model_status_label, 1, 1)
-    left_layout.addWidget(model_group)
+
 
     # --- Кнопки анализа СВЕРХУ ---
     buttons_group = QGroupBox("Управление")
