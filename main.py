@@ -660,10 +660,11 @@ class MyApp(QMainWindow, Ui_mainWindow):
         gaps_indices = np.where(gaps_mask)[0]
         
         # 3. ОПРЕДЕЛЕНИЕ РЕЖИМА ИНТЕРПОЛЯЦИИ
-        # Проверяем, есть ли обученная модель (может быть BinaryCurveModel или DimensionlessCurveInterpolator)
+        # Проверяем, есть ли обученная модель для интерполяции (исключаем QuadraticRegressionModel - он для подгонки, не для интерполяции)
         use_trained_model = (self.trained_interpolator is not None and 
                             hasattr(self.trained_interpolator, 'is_fitted') and 
-                            self.trained_interpolator.is_fitted)
+                            self.trained_interpolator.is_fitted and
+                            not isinstance(self.trained_interpolator, QuadraticRegressionModel))  # QuadraticRegressionModel не используется для интерполяции
         use_trained_interpolation_model = (self.trained_interpolation_model is not None and 
                                           hasattr(self.trained_interpolation_model, 'is_fitted') and 
                                           self.trained_interpolation_model.is_fitted)
@@ -2247,11 +2248,17 @@ class MyApp(QMainWindow, Ui_mainWindow):
             self.show_warning("Ошибка", "Нет данных для подгонки")
             return
         
-        # Проверяем наличие X и Y в данных
-        if not (hasattr(self.current_data, 'X') and self.current_data.X is not None and
-                hasattr(self.current_data, 'Y') and self.current_data.Y is not None):
-            self.show_warning("Ошибка", "В данных отсутствуют X и Y. Невозможно выполнить подгонку.")
-            return
+        # Проверяем, есть ли обученная модель
+        has_trained_model = (self.trained_interpolator is not None and 
+                            isinstance(self.trained_interpolator, QuadraticRegressionModel) and
+                            self.trained_interpolator.is_fitted)
+        
+        # Если модель не обучена, проверяем наличие X и Y в данных (они нужны для локальной подгонки)
+        if not has_trained_model:
+            if not (hasattr(self.current_data, 'X') and self.current_data.X is not None and
+                    hasattr(self.current_data, 'Y') and self.current_data.Y is not None):
+                self.show_warning("Ошибка", "В данных отсутствуют X и Y. Невозможно выполнить подгонку без обученной модели.")
+                return
         
         try:
             # Получаем параметры скважины
@@ -2265,36 +2272,44 @@ class MyApp(QMainWindow, Ui_mainWindow):
             # Сохраняем оригинальные расчётные значения
             self.original_calc_XY = (dim_data.X.copy(), dim_data.Y.copy())
             
-            # Получаем эталонные значения из данных
-            X_data = self.current_data.X.values
-            Y_data = self.current_data.Y.values
+            # Получаем эталонные значения из данных (если есть)
+            has_reference_xy = (hasattr(self.current_data, 'X') and self.current_data.X is not None and
+                               hasattr(self.current_data, 'Y') and self.current_data.Y is not None)
+            
             X_calc = dim_data.X
             Y_calc = dim_data.Y
             
             # Используем обученную модель, если она есть
-            if (self.trained_interpolator is not None and 
-                isinstance(self.trained_interpolator, QuadraticRegressionModel) and
-                self.trained_interpolator.is_fitted):
+            if has_trained_model:
                 # Используем обученную модель для подгонки
                 X_fitted, Y_fitted = self.trained_interpolator.predict(X_calc, Y_calc)
                 
-                # Вычисляем метрики
-                mask = np.isfinite(X_data) & np.isfinite(Y_data) & np.isfinite(X_fitted) & np.isfinite(Y_fitted)
-                if np.any(mask):
-                    rmse_y = np.sqrt(np.mean((Y_data[mask] - Y_fitted[mask]) ** 2))
-                    rmse_x = np.sqrt(np.mean((X_data[mask] - X_fitted[mask]) ** 2))
-                    
-                    y_mean = np.mean(Y_data[mask])
-                    ss_tot = np.sum((Y_data[mask] - y_mean) ** 2)
-                    r2_y = 1 - np.sum((Y_data[mask] - Y_fitted[mask]) ** 2) / ss_tot if ss_tot > 0 else 0.0
-                    
-                    y_range = np.max(Y_data[mask]) - np.min(Y_data[mask])
-                    accuracy = max(0, (1 - rmse_y / y_range) * 100) if y_range > 0 else 0.0
+                # Вычисляем метрики только если есть эталонные данные
+                if has_reference_xy:
+                    X_data = self.current_data.X.values
+                    Y_data = self.current_data.Y.values
+                    mask = np.isfinite(X_data) & np.isfinite(Y_data) & np.isfinite(X_fitted) & np.isfinite(Y_fitted)
+                    if np.any(mask):
+                        rmse_y = np.sqrt(np.mean((Y_data[mask] - Y_fitted[mask]) ** 2))
+                        rmse_x = np.sqrt(np.mean((X_data[mask] - X_fitted[mask]) ** 2))
+                        
+                        y_mean = np.mean(Y_data[mask])
+                        ss_tot = np.sum((Y_data[mask] - y_mean) ** 2)
+                        r2_y = 1 - np.sum((Y_data[mask] - Y_fitted[mask]) ** 2) / ss_tot if ss_tot > 0 else 0.0
+                        
+                        y_range = np.max(Y_data[mask]) - np.min(Y_data[mask])
+                        accuracy = max(0, (1 - rmse_y / y_range) * 100) if y_range > 0 else 0.0
+                    else:
+                        rmse_y = np.inf
+                        rmse_x = np.inf
+                        r2_y = 0.0
+                        accuracy = 0.0
                 else:
-                    rmse_y = np.inf
-                    rmse_x = np.inf
-                    r2_y = 0.0
-                    accuracy = 0.0
+                    # Если нет эталонных данных, метрики не вычисляем
+                    rmse_y = np.nan
+                    rmse_x = np.nan
+                    r2_y = np.nan
+                    accuracy = np.nan
                 
                 coef = self.trained_interpolator.get_coefficients()
                 
@@ -2315,6 +2330,9 @@ class MyApp(QMainWindow, Ui_mainWindow):
                 }
             else:
                 # Используем старый метод подгонки для одной скважины
+                # В этом блоке X_data и Y_data всегда должны быть, так как проверка выполнена выше
+                X_data = self.current_data.X.values
+                Y_data = self.current_data.Y.values
                 fit_result = fit_xy_curve_coefficients(X_data, Y_data, X_calc, Y_calc, fit_only_y=False)
             
             # Сохраняем результаты (коэффициенты будут применяться автоматически при построении графиков)
@@ -2356,10 +2374,24 @@ class MyApp(QMainWindow, Ui_mainWindow):
                 report += f"   ⚠️ c был ограничен до [-0.2, 0.2]\n"
             if fit_result.get('fallback_used', False):
                 report += f"   ⚠️ Использован fallback (c=0) из-за ухудшения RMSE\n"
-            report += f"   RMSE до подгонки = {fit_result.get('rmse_before', fit_result['rmse']):.4e}\n"
-            report += f"   RMSE после подгонки = {fit_result['rmse']:.4e}\n"
-            report += f"   Точность = {fit_result['accuracy']:.2f}%\n"
-            report += f"   R² = {fit_result['r2']:.4f}\n\n"
+            # Выводим метрики только если они вычислены
+            if not (has_trained_model and not has_reference_xy):
+                rmse_before = fit_result.get('rmse_before', fit_result['rmse'])
+                rmse_after = fit_result['rmse']
+                accuracy = fit_result['accuracy']
+                r2 = fit_result['r2']
+                
+                if not (np.isnan(rmse_before) or np.isinf(rmse_before)):
+                    report += f"   RMSE до подгонки = {rmse_before:.4e}\n"
+                if not (np.isnan(rmse_after) or np.isinf(rmse_after)):
+                    report += f"   RMSE после подгонки = {rmse_after:.4e}\n"
+                if not (np.isnan(accuracy) or np.isinf(accuracy)):
+                    report += f"   Точность = {accuracy:.2f}%\n"
+                if not (np.isnan(r2) or np.isinf(r2)):
+                    report += f"   R² = {r2:.4f}\n"
+            else:
+                report += f"   ⚠️ Метрики не вычислены (отсутствуют эталонные X-Y в данных)\n"
+            report += "\n"
             report += "📘 Итоговая аппроксимирующая формула:\n"
             report += f"   X_fit = {fit_result['a']:.3g} * (0.00864 * k * h * ΔP / (μ * B * Q))\n"
             if abs(c_val) < 1e-10:
@@ -2387,9 +2419,15 @@ class MyApp(QMainWindow, Ui_mainWindow):
             else:
                 model_info = "\n(Использована локальная подгонка для текущей скважины)"
             
+            # Формируем сообщение с метриками
+            metrics_msg = ""
+            if not (has_trained_model and not has_reference_xy):
+                accuracy = fit_result['accuracy']
+                if not (np.isnan(accuracy) or np.isinf(accuracy)):
+                    metrics_msg = f"\nТочность: {accuracy:.2f}%"
+            
             self.show_info("Подгонка выполнена", 
-                         f"Коэффициенты: a={fit_result['a']:.3g}, b={fit_result['b']:.3g}, c={c_val:.3g}\n"
-                         f"Точность: {fit_result['accuracy']:.2f}%\n"
+                         f"Коэффициенты: a={fit_result['a']:.3g}, b={fit_result['b']:.3g}, c={c_val:.3g}{metrics_msg}\n"
                          f"Коэффициенты сохранены и будут применяться автоматически.{model_info}")
             
         except Exception as e:
