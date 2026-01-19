@@ -18,7 +18,7 @@ from ui import Ui_mainWindow
 
 from helpers.parse_well_data import parse_well_data
 from helpers.ml_methods import (detect_outliers)
-from helpers.dimensionless_analysis import convert_to_dimensionless_curves, get_dimensionless_series, fit_xy_curve_coefficients
+from helpers.dimensionless_analysis import convert_to_dimensionless_curves, fit_xy_curve_coefficients
 from helpers.dimensionless.filtration import SignalFilters, PhysicsConstraints, compute_snr
 from helpers.dimensionless_plotting import plot_dimensionless_grouped
 from helpers.dimensionless.filtration.utils import select_filter_method
