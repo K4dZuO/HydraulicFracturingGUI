@@ -11,7 +11,6 @@ from .utils import (
     detect_log_scale,
     select_filter_method,
     fill_missing_values,
-    remove_outliers
 )
 
 # Опциональный импорт ML-денойзера
@@ -24,7 +23,6 @@ try:
         'detect_log_scale',
         'select_filter_method',
         'fill_missing_values',
-        'remove_outliers'
     ]
 except ImportError:
     __all__ = [
@@ -35,6 +33,5 @@ except ImportError:
         'detect_log_scale',
         'select_filter_method',
         'fill_missing_values',
-        'remove_outliers'
     ]
 

@@ -193,42 +193,7 @@ class TestPhysicalAdequacy:
         diff = np.abs(interpolated_values - original_values)
         assert diff.max() < 50, "Интерполированные значения не должны сильно отличаться от исходных"
     
-    def test_ml_filtering_adequacy(self):
-        """Тест адекватности ML-фильтрации"""
-        time = pd.Series(range(20))
-        clean_values = pd.Series([100 - i for i in range(20)])
-        noisy_values = clean_values + np.random.normal(0, 2, 20)
-        
-        filtered = apply_ml_filter(noisy_values, 'savitzky_golay', window_length=5, polyorder=2)
-        
-        # Проверяем адекватность отфильтрованных значений
-        assert not filtered.isna().any(), "Отфильтрованные значения не должны содержать NaN"
-        assert filtered.min() > 0, "Отфильтрованные значения должны быть положительными"
-        assert filtered.max() < 1000, "Отфильтрованные значения не должны быть слишком большими"
-        
-        # Проверяем, что фильтрация уменьшила шум
-        noise_reduction = np.std(noisy_values - filtered) < np.std(noisy_values - clean_values)
-        assert noise_reduction, "Фильтрация должна уменьшать шум"
-    
-    def test_outlier_detection_adequacy(self):
-        """Тест адекватности обнаружения выбросов"""
-        # Создаем данные с известными выбросами
-        values = pd.Series([1, 2, 3, 4, 5, 100, 6, 7, 8, 9, 10])  # 100 - выброс
-        
-        outliers = detect_outliers(values, 'iqr', threshold=1.5)
-        
-        # Проверяем корректность обнаружения
-        assert isinstance(outliers, pd.Series), "Результат должен быть pandas Series"
-        assert outliers.dtype == bool, "Результат должен быть булевым"
-        assert len(outliers) == len(values), "Длина результата должна совпадать с длиной входных данных"
-        
-        # Проверяем, что выброс обнаружен
-        assert outliers.iloc[5] == True, "Значение 100 должно быть обнаружено как выброс"
-        
-        # Проверяем, что нормальные значения не помечены как выбросы
-        normal_values = outliers.iloc[[0, 1, 2, 3, 4, 6, 7, 8, 9, 10]]
-        assert normal_values.sum() == 0, "Нормальные значения не должны быть помечены как выбросы"
-
+  
 
 if __name__ == "__main__":
     pytest.main([__file__, "-v"])

@@ -274,42 +274,7 @@ class MyApp(QMainWindow, Ui_mainWindow):
         
         return gap_mask
     
-    def _get_Y_at_time(self, dim_data, time_array: np.ndarray, t_query: float) -> float:
-        """
-        Получает Y-координату для заданного времени t_query.
-        
-        Args:
-            dim_data: Объект с атрибутами Y и t (или time)
-            time_array: Массив временных меток
-            t_query: Запрос времени
-        
-        Returns:
-            Y-координата для времени t_query
-        """
-        # Проверяем, есть ли прямое соответствие t->Y
-        if hasattr(dim_data, 't') and len(dim_data.t) == len(dim_data.Y):
-            from scipy.interpolate import interp1d
-            f = interp1d(dim_data.t, dim_data.Y, kind='linear', bounds_error=False, fill_value=np.nan)
-            return float(f(t_query))
-        elif len(time_array) == len(dim_data.Y):
-            # Используем time_array как маппинг
-            from scipy.interpolate import interp1d
-            # Удаляем NaN для интерполяции
-            valid_mask = np.isfinite(time_array) & np.isfinite(dim_data.Y)
-            if np.sum(valid_mask) < 2:
-                # Fallback: используем ближайшее значение
-                idx = np.argmin(np.abs(time_array - t_query))
-                return float(dim_data.Y[idx]) if idx < len(dim_data.Y) else np.nan
-            
-            f = interp1d(time_array[valid_mask], dim_data.Y[valid_mask], 
-                       kind='linear', bounds_error=False, fill_value=np.nan)
-            result = f(t_query)
-            return float(result) if np.isfinite(result) else np.nan
-        else:
-            # Fallback: используем ближайшее значение по времени
-            idx = np.argmin(np.abs(time_array - t_query))
-            return float(dim_data.Y[idx]) if idx < len(dim_data.Y) else np.nan
-    
+
     def _detect_neighbor_copy(self, pred_values: np.ndarray, original_values: np.ndarray, 
                              gaps_indices: np.ndarray, eps: float = 1e-8) -> float:
         """

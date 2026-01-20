@@ -6,7 +6,7 @@ from sklearn.gaussian_process.kernels import RBF, WhiteKernel
 from scipy.interpolate import RBFInterpolator
 from sklearn.metrics import mean_squared_error
 
-from helpers.math_error_logger import log_math_error, log_metric_error, log_computation_error
+from helpers.math_error_logger import log_math_error, log_computation_error
 
 
 class DimensionlessCurveInterpolator:
@@ -357,30 +357,10 @@ class DimensionlessCurveInterpolator:
             "message": f"Выбран метод '{self.best_method}' с RMSE={self.rmse_scores.get(self.best_method, 0):.4f}"
         }
 
-    def fit_xy(self, param_grid: np.ndarray, Y_grid: np.ndarray, X_curves: np.ndarray, Y_curves: np.ndarray):
-        """Обучение интерполяции на X-Y кривых."""
-        # Обучаем отдельные модели для X и Y
-        self.param_grid = np.asarray(param_grid)
-        self.Y_grid = np.asarray(Y_grid)
-        X_curves = np.asarray(X_curves)
-        Y_curves = np.asarray(Y_curves)
-        
-        # Обучаем модель для X
-        self.X_interpolator = DimensionlessCurveInterpolator(methods=self.methods, constraints=self.constraints)
-        self.X_interpolator.fit(param_grid, Y_grid, X_curves)
-        
-        # Обучаем модель для Y (Y обычно совпадает с Y_grid, но для консистентности обучаем отдельно)
-        self.Y_interpolator = DimensionlessCurveInterpolator(methods=self.methods, constraints=self.constraints)
-        self.Y_interpolator.fit(param_grid, Y_grid, Y_curves)
-        
-        self.is_fitted = True
-        self.best_method = self.X_interpolator.best_method  # Используем метод из X интерполятора
-        self.rmse_scores = self.X_interpolator.rmse_scores  # Используем метрики из X интерполятора
-        
     def predict(self, skin: float, N: float, a_L: float) -> pd.DataFrame:
         """Получение интерполированной X-Y кривой для заданных параметров."""
         if not self.is_fitted:
-            raise RuntimeError("Сначала вызови fit() или fit_xy()")
+            raise RuntimeError("Сначала вызови fit()")
         
         # Если обучены X-Y модели, используем их
         if hasattr(self, 'X_interpolator') and hasattr(self, 'Y_interpolator'):
@@ -400,7 +380,7 @@ class DimensionlessCurveInterpolator:
         
         # Иначе используем старый метод (для обратной совместимости)
         if not hasattr(self, 'models') or len(self.models) == 0:
-            raise RuntimeError("Модель не обучена. Вызовите fit() или fit_xy()")
+            raise RuntimeError("Модель не обучена. Вызовите fit()")
 
         # Старый метод для обратной совместимости (pD интерполяция)
         X_pred = np.array([[skin, N, a_L]])
@@ -664,144 +644,3 @@ class DimensionlessCurveInterpolator:
             "max_jump": float(max_jump),
             "max_second_derivative": float(max_dd),
         }
-
-
-    def compare_with_reference(self, Y_pred: np.ndarray, P_pred: np.ndarray,
-                               Y_ref: np.ndarray, P_ref: np.ndarray, 
-                               n_random_points: int = 100) -> dict:
-        """Сравнение предсказанной кривой с эталоном по нескольким метрикам.
-
-        Использует случайные точки эталона для более точной оценки качества.
-        
-        Args:
-            Y_pred: Y координаты предсказания
-            P_pred: pD значения предсказания
-            Y_ref: Y координаты эталона
-            P_ref: pD значения эталона
-            n_random_points: Количество случайных точек для оценки (по умолчанию 100)
-        
-        Returns:
-            Словарь с метриками: {'rmse', 'mae', 'mape', 'r2', 'max_error', 'median_error', 'mean_error'}
-        """
-        Yp = np.clip(np.asarray(Y_pred), 1e-30, None)
-        Yr = np.clip(np.asarray(Y_ref), 1e-30, None)
-        Pp = np.asarray(P_pred)
-        Pr = np.asarray(P_ref)
-
-        # Определяем диапазон для случайных точек
-        Y_min = max(np.nanmin(Yp), np.nanmin(Yr))
-        Y_max = min(np.nanmax(Yp), np.nanmax(Yr))
-        
-        if Y_min >= Y_max:
-            # Если диапазоны не пересекаются, используем стандартный подход
-            Pr_interp = np.interp(np.log10(Yp), np.log10(Yr), Pr)
-            Y_eval = Yp
-            P_ref_eval = Pr_interp
-            P_pred_eval = Pp
-        else:
-            # Генерируем случайные точки в логарифмической шкале для равномерного распределения
-            np.random.seed(42)  # Для воспроизводимости
-            log_Y_random = np.random.uniform(np.log10(Y_min), np.log10(Y_max), n_random_points)
-            Y_random = 10 ** log_Y_random
-            
-            # Интерполируем эталон на случайные точки
-            from scipy.interpolate import interp1d
-            # Сортируем эталон для интерполяции
-            sort_idx_ref = np.argsort(np.log10(Yr))
-            Yr_sorted = Yr[sort_idx_ref]
-            Pr_sorted = Pr[sort_idx_ref]
-            
-            # Удаляем дубликаты для интерполяции
-            unique_mask = np.concatenate(([True], np.diff(np.log10(Yr_sorted)) > 1e-10))
-            Yr_unique = Yr_sorted[unique_mask]
-            Pr_unique = Pr_sorted[unique_mask]
-            
-            if len(Yr_unique) > 1:
-                interp_ref = interp1d(np.log10(Yr_unique), Pr_unique, 
-                                     kind='linear', bounds_error=False, fill_value='extrapolate')
-                P_ref_random = interp_ref(log_Y_random)
-            else:
-                P_ref_random = np.full(n_random_points, Pr_unique[0] if len(Pr_unique) > 0 else 0)
-            
-            # Интерполируем предсказание на те же случайные точки
-            sort_idx_pred = np.argsort(np.log10(Yp))
-            Yp_sorted = Yp[sort_idx_pred]
-            Pp_sorted = Pp[sort_idx_pred]
-            
-            unique_mask_pred = np.concatenate(([True], np.diff(np.log10(Yp_sorted)) > 1e-10))
-            Yp_unique = Yp_sorted[unique_mask_pred]
-            Pp_unique = Pp_sorted[unique_mask_pred]
-            
-            if len(Yp_unique) > 1:
-                interp_pred = interp1d(np.log10(Yp_unique), Pp_unique,
-                                     kind='linear', bounds_error=False, fill_value='extrapolate')
-                P_pred_random = interp_pred(log_Y_random)
-            else:
-                P_pred_random = np.full(n_random_points, Pp_unique[0] if len(Pp_unique) > 0 else 0)
-            
-            # Фильтруем валидные точки
-            valid_mask = np.isfinite(P_ref_random) & np.isfinite(P_pred_random)
-            Y_eval = Y_random[valid_mask]
-            P_ref_eval = P_ref_random[valid_mask]
-            P_pred_eval = P_pred_random[valid_mask]
-        
-        # Вычисляем метрики
-        diff = P_pred_eval - P_ref_eval
-        
-        # RMSE (Root Mean Square Error)
-        rmse = float(np.sqrt(np.nanmean(diff ** 2)))
-        
-        # MAE (Mean Absolute Error)
-        mae = float(np.nanmean(np.abs(diff)))
-        
-        # MAPE (Mean Absolute Percentage Error) в процентах
-        denom = np.where(np.abs(P_ref_eval) < 1e-12, 1e-12, np.abs(P_ref_eval))
-        mape = float(np.nanmean(np.abs(diff) / denom) * 100.0)
-        
-        # R² (Coefficient of Determination)
-        ss_res = np.nansum((P_ref_eval - P_pred_eval) ** 2)
-        ss_tot = np.nansum((P_ref_eval - np.nanmean(P_ref_eval)) ** 2)
-        r2 = float(1 - (ss_res / ss_tot)) if ss_tot > 0 else 0.0
-        
-        # Max Error
-        max_error = float(np.nanmax(np.abs(diff)))
-        
-        # Median Error
-        median_error = float(np.nanmedian(np.abs(diff)))
-        
-        # Mean Error (может быть отрицательным)
-        mean_error = float(np.nanmean(diff))
-        
-        # Mean Squared Error (MSE)
-        mse = float(np.nanmean(diff ** 2))
-
-        metrics = {
-            "rmse": rmse, 
-            "mae": mae, 
-            "mape": mape,
-            "r2": r2,
-            "max_error": max_error,
-            "median_error": median_error,
-            "mean_error": mean_error,
-            "mse": mse
-        }
-        
-        # Логируем метрики ошибок
-        try:
-            data_volume = len(Y_eval) if len(Y_eval) > 0 else len(Y_pred)
-            # Оцениваем качество данных (чем меньше NaN/Inf, тем выше качество)
-            quality = np.sum(np.isfinite(P_pred_eval)) / len(P_pred_eval) if len(P_pred_eval) > 0 else 0.0
-            
-            log_metric_error(
-                subsystem="interpolation",
-                method=self.best_method or "unknown",
-                metrics=metrics,
-                data_volume=data_volume,
-                data_quality=quality,
-                metadata={"n_points": len(Y_eval), "method": self.best_method}
-            )
-        except Exception as e:
-            # Не прерываем выполнение при ошибке логирования
-            pass
-        
-        return metrics
