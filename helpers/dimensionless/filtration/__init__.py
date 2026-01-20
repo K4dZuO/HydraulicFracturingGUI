@@ -16,12 +16,9 @@ from .utils import (
 
 # Опциональный импорт ML-денойзера
 try:
-    from .denoise import MLDenoiser, apply_ml_denoising
     __all__ = [
         'SignalFilters',
         'PhysicsConstraints',
-        'MLDenoiser',
-        'apply_ml_denoising',
         'compute_snr',
         'compute_oscillation_score',
         'detect_log_scale',

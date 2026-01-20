@@ -156,33 +156,3 @@ class MLDenoiser:
         """Проверяет доступность ML функциональности."""
         return ML_AVAILABLE
 
-
-def apply_ml_denoising(
-    Y: np.ndarray,
-    curve: np.ndarray,
-    method: str = 'mlp',
-    use_ml: bool = True
-) -> Tuple[np.ndarray, bool]:
-    """
-    Применяет ML-денойзинг к кривой.
-    
-    Args:
-        Y: Безразмерная ось
-        curve: Значения pD(Y)
-        method: Метод ML-денойзинга
-        use_ml: Использовать ли ML (если False, возвращает исходную кривую)
-    
-    Returns:
-        Tuple (отфильтрованная кривая, успех операции)
-    """
-    if not use_ml or not ML_AVAILABLE:
-        return curve, False
-    
-    try:
-        denoiser = MLDenoiser(method=method)
-        denoised = denoiser.denoise(Y, curve)
-        return denoised, True
-    except Exception:
-        # В случае ошибки возвращаем исходную кривую
-        return curve, False
-
