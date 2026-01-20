@@ -12,7 +12,6 @@ import pyqtgraph as pg
 from pyqtgraph import PlotWidget, mkPen, mkBrush
 from helpers.dimensionless_analysis import (
     DimensionlessParameters, 
-    convert_to_dimensionless_curves,
 )
 
 
@@ -97,7 +96,6 @@ def plot_dimensionless_grouped(plot_widget: PlotWidget,
         Y_calc = dim_data.Y.astype(float)
         
         # Используем X и Y из данных, если они есть, иначе используем рассчитанные из dim_data
-        # (как в example.py - напрямую из convert_to_dimensionless_curves, без препроцессора)
         if X_data is not None and Y_data is not None:
             # Преобразуем в numpy массивы (без ограничения снизу, так как не log-log)
             X = X_data.values.astype(float)
