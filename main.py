@@ -78,20 +78,11 @@ class MyApp(QMainWindow, Ui_mainWindow):
         self.original_calc_XY = None  # Оригинальные расчётные X,Y (до подгонки)
         self.trained_interpolator = None  # Обученный интерполятор (может быть загружен из файла)
         self.trained_interpolator_path = None  # Путь к загруженной модели
+        self.trained_interpolation_model = None  # Обученная модель интерполяции (DimensionlessCurveInterpolator)
+        self.trained_interpolation_model_path = None  # Путь к загруженной модели интерполяции
         
         # Создаем  интерфейс с вкладками
         setup_interface(self)
-        
-        # Добавляем отчёт в centralwidget под параметрами (вне вкладок)
-        report_group = QGroupBox("Отчёт", self.centralwidget)
-        report_group.setGeometry(20, 330, 300, 400)  # Под параметрами (последний на y=300)
-        report_layout = QVBoxLayout(report_group)
-        self.text_report = QTextEdit(report_group)
-        self.text_report.setReadOnly(True)
-        self.text_report.setPlaceholderText("Здесь появится отчёт...")
-        self.text_report.setMinimumHeight(150)
-        self.text_report.setMaximumHeight(500)
-        report_layout.addWidget(self.text_report)
         
         # Настраиваем обработчики событий
         self.setup_event_handlers()
@@ -669,9 +660,15 @@ class MyApp(QMainWindow, Ui_mainWindow):
         gaps_indices = np.where(gaps_mask)[0]
         
         # 3. ОПРЕДЕЛЕНИЕ РЕЖИМА ИНТЕРПОЛЯЦИИ
-        # Проверяем, есть ли обученная модель
-        use_trained_model = self.trained_interpolator is not None and self.trained_interpolator.is_fitted
-        use_local_mode = not use_trained_model  # Локальный режим, если нет обученной модели
+        # Проверяем, есть ли обученная модель для интерполяции (исключаем QuadraticRegressionModel - он для подгонки, не для интерполяции)
+        use_trained_model = (self.trained_interpolator is not None and 
+                            hasattr(self.trained_interpolator, 'is_fitted') and 
+                            self.trained_interpolator.is_fitted and
+                            not isinstance(self.trained_interpolator, QuadraticRegressionModel))  # QuadraticRegressionModel не используется для интерполяции
+        use_trained_interpolation_model = (self.trained_interpolation_model is not None and 
+                                          hasattr(self.trained_interpolation_model, 'is_fitted') and 
+                                          self.trained_interpolation_model.is_fitted)
+        use_local_mode = not (use_trained_model or use_trained_interpolation_model)  # Локальный режим, если нет обученной модели
         
         # 4. ИНТЕРПОЛЯЦИЯ X-Y КРИВОЙ (расчётной)
         pressure_restored = self.current_data.pressure.copy()
@@ -691,10 +688,10 @@ class MyApp(QMainWindow, Ui_mainWindow):
                 if np.sum(valid_XY_mask) > 0:
                     # Предсказываем X-Y кривую для всех точек Y_grid модели
                     XY_pred = self.trained_interpolator.predict(
-            skin=self.current_data.skin,
-            N=self.current_data.fractures_count,
-            a_L=self.current_data.a_l_ratio
-        )
+                        skin=self.current_data.skin,
+                        N=self.current_data.fractures_count,
+                        a_L=self.current_data.a_l_ratio
+                    )
         
                     # XY_pred должен быть DataFrame с колонками 'X' и 'Y' или Series с MultiIndex
                     if isinstance(XY_pred, pd.DataFrame) and 'X' in XY_pred.columns and 'Y' in XY_pred.columns:
@@ -731,6 +728,54 @@ class MyApp(QMainWindow, Ui_mainWindow):
             except Exception as e:
                 # Если ошибка при использовании обученной модели, переключаемся на локальный режим
                 print(f"Ошибка при использовании обученной модели: {e}")
+                use_local_mode = True
+                X_values_gaps = None
+                Y_values_gaps = None
+        elif use_trained_interpolation_model:
+            # Используем DimensionlessCurveInterpolator или SimpleRBFInterpolator
+            try:
+                if np.sum(valid_XY_mask) > 0:
+                    # Получаем параметры скважины
+                    skin = self.current_data.skin if hasattr(self.current_data, 'skin') else 0.0
+                    N = self.current_data.fractures_count if hasattr(self.current_data, 'fractures_count') else 1
+                    a_L = self.current_data.a_l_ratio if hasattr(self.current_data, 'a_l_ratio') else 0.1
+                    
+                    # Предсказываем P_D кривую
+                    P_D_pred = self.trained_interpolation_model.predict(skin, N, a_L)
+                    
+                    if isinstance(P_D_pred, pd.Series) and len(P_D_pred) > 0:
+                        # P_D_pred - это Series с индексом Y и значениями P_D
+                        Y_grid_model = P_D_pred.index.values
+                        P_D_values = P_D_pred.values
+                        
+                        # Преобразуем P_D в X и Y
+                        # X = P_D (безразмерное давление)
+                        # Y уже есть в индексе
+                        X_pred_model = P_D_values
+                        Y_pred_model = Y_grid_model
+                        
+                        from scipy.interpolate import interp1d
+                        # Интерполируем X и Y для пропусков
+                        interp_X = interp1d(Y_grid_model, X_pred_model, kind='linear',
+                                           bounds_error=False, fill_value=np.nan)
+                        interp_Y = interp1d(Y_grid_model, Y_pred_model, kind='linear',
+                                           bounds_error=False, fill_value=np.nan)
+                        
+                        Y_targets_valid = Y_targets[valid_XY_mask]
+                        X_values_gaps = interp_X(Y_targets_valid)
+                        Y_values_gaps = interp_Y(Y_targets_valid)
+                    else:
+                        # Fallback на локальную интерполяцию
+                        use_local_mode = True
+                        X_values_gaps = None
+                        Y_values_gaps = None
+                else:
+                    use_local_mode = True
+                    X_values_gaps = None
+                    Y_values_gaps = None
+            except Exception as e:
+                # Если ошибка при использовании модели интерполяции, переключаемся на локальный режим
+                print(f"Ошибка при использовании модели интерполяции: {e}")
                 use_local_mode = True
                 X_values_gaps = None
                 Y_values_gaps = None
@@ -951,10 +996,21 @@ class MyApp(QMainWindow, Ui_mainWindow):
                 rmse_scores = {'quadratic_regression': metrics['rmse_y']}
                 n_samples = metrics['n_samples']
             else:
-                # Для DimensionlessCurveInterpolator
-                best_method = self.trained_interpolator.best_method
-                rmse_scores = self.trained_interpolator.rmse_scores
+                # Для BinaryCurveModel или другого типа
+                best_method = getattr(self.trained_interpolator, 'best_method', 'unknown')
+                rmse_scores = getattr(self.trained_interpolator, 'rmse_scores', {})
                 n_samples = self.trained_interpolator.param_grid.shape[0] if hasattr(self.trained_interpolator, 'param_grid') else 0
+        elif use_trained_interpolation_model and not use_local_mode:
+            # Для DimensionlessCurveInterpolator или SimpleRBFInterpolator
+            method_used = 'trained_interpolation_model'
+            best_method = getattr(self.trained_interpolation_model, 'best_method', 'rbf')
+            rmse_scores = getattr(self.trained_interpolation_model, 'rmse_scores', {})
+            if hasattr(self.trained_interpolation_model, 'param_grid'):
+                n_samples = self.trained_interpolation_model.param_grid.shape[0]
+            elif hasattr(self.trained_interpolation_model, 'n_wells'):
+                n_samples = self.trained_interpolation_model.n_wells
+            else:
+                n_samples = 0
         else:
             method_used = 'local_pchip'
             best_method = 'local_pchip'
@@ -1306,6 +1362,383 @@ class MyApp(QMainWindow, Ui_mainWindow):
         
         return report
     
+    def on_train_interpolator_model(self) -> None:
+        """Обучает модель интерполяции DimensionlessCurveInterpolator на массиве всех скважин"""
+        if not self.loaded_data:
+            self.show_info("Ошибка", "Нет загруженных данных для обучения")
+            return
+        
+        try:
+            # Собираем данные для обучения интерполятора
+            param_grid = []  # Параметры (skin, N, a/L) для каждой скважины
+            P_curves_list = []  # Кривые давления (pD) для каждой скважины
+            Y_grids_list = []  # Сетки Y для каждой скважины
+            
+            for idx, well_data in enumerate(self.loaded_data):
+                # Проверяем тип данных
+                if not isinstance(well_data, WellTimeSeries):
+                    print(f"Пропущена скважина {idx}: неверный тип данных (ожидается WellTimeSeries, получен {type(well_data)})")
+                    continue
+                try:
+                    # Проверяем, что well_data - это WellTimeSeries
+                    if not hasattr(well_data, 'pressure') or not hasattr(well_data, 'time'):
+                        print(f"Пропущена скважина {idx}: отсутствуют необходимые атрибуты")
+                        continue
+                    
+                    # Проверяем, что это не строка или другой неподходящий тип
+                    if isinstance(well_data, str) or not isinstance(well_data, WellTimeSeries):
+                        print(f"Пропущена скважина {idx}: неверный тип данных")
+                        continue
+                    
+                    params = self._get_params(well_data)
+                    
+                    # Правильно извлекаем данные - проверяем, что это Series или массив
+                    if hasattr(well_data.time, 'values'):
+                        time_series = well_data.time.values
+                    elif isinstance(well_data.time, (list, tuple, np.ndarray)):
+                        time_series = np.array(well_data.time)
+                    else:
+                        print(f"Пропущена скважина {idx}: неверный тип time")
+                        continue
+                    
+                    if hasattr(well_data.pressure, 'values'):
+                        pressure_series = well_data.pressure.values
+                    elif isinstance(well_data.pressure, (list, tuple, np.ndarray)):
+                        pressure_series = np.array(well_data.pressure)
+                    else:
+                        print(f"Пропущена скважина {idx}: неверный тип pressure")
+                        continue
+                    
+                    if hasattr(well_data.flow_rate, 'values'):
+                        flow_rate_series = well_data.flow_rate.values
+                    elif isinstance(well_data.flow_rate, (list, tuple, np.ndarray)):
+                        flow_rate_series = np.array(well_data.flow_rate)
+                    else:
+                        print(f"Пропущена скважина {idx}: неверный тип flow_rate")
+                        continue
+                    
+                    if well_data.depression is not None:
+                        if hasattr(well_data.depression, 'values'):
+                            depression_series = well_data.depression.values
+                        elif isinstance(well_data.depression, (list, tuple, np.ndarray)):
+                            depression_series = np.array(well_data.depression)
+                        else:
+                            depression_series = None
+                    else:
+                        depression_series = None
+                    
+                    # Преобразуем в Series для совместимости
+                    import pandas as pd
+                    time_pd = pd.Series(time_series)
+                    pressure_pd = pd.Series(pressure_series)
+                    flow_rate_pd = pd.Series(flow_rate_series)
+                    depression_pd = pd.Series(depression_series) if depression_series is not None else None
+                    
+                    # Вычисляем безразмерные параметры
+                    dim_data = convert_to_dimensionless_curves(
+                        time_pd, pressure_pd, flow_rate_pd,
+                        depression_pd, params, x_mode='alt'
+                    )
+                    
+                    # Вычисляем pD (безразмерное давление)
+                    pressure_values = np.asarray(pressure_series).flatten()
+                    
+                    if len(pressure_values) == 0:
+                        print(f"Пропущена скважина {idx}: пустой массив давления")
+                        continue
+                    
+                    delta_p_i = float(np.max(pressure_values)) - float(np.min(pressure_values))
+                    if delta_p_i == 0 or not np.isfinite(delta_p_i):
+                        delta_p_i = 1.0
+                    
+                    pD = pressure_values / delta_p_i
+                    Y = dim_data.Y
+                    
+                    # Убираем NaN и Inf
+                    valid_mask = np.isfinite(pD) & np.isfinite(Y) & (Y > 0)
+                    if np.sum(valid_mask) < 10:  # Минимум 10 точек
+                        continue
+                    
+                    pD_valid = pD[valid_mask]
+                    Y_valid = Y[valid_mask]
+                    
+                    # Сортируем по Y
+                    sort_idx = np.argsort(Y_valid)
+                    Y_sorted = Y_valid[sort_idx]
+                    pD_sorted = pD_valid[sort_idx]
+                    
+                    # Добавляем параметры скважины (проверяем наличие атрибутов)
+                    if not (hasattr(well_data, 'skin') and hasattr(well_data, 'fractures_count') and hasattr(well_data, 'a_l_ratio')):
+                        print(f"Пропущена скважина {idx}: отсутствуют параметры скважины")
+                        continue
+                    
+                    skin_val = float(well_data.skin) if hasattr(well_data, 'skin') else 0.0
+                    fractures_val = int(well_data.fractures_count) if hasattr(well_data, 'fractures_count') else 1
+                    a_l_val = float(well_data.a_l_ratio) if hasattr(well_data, 'a_l_ratio') else 0.5
+                    
+                    param_grid.append([skin_val, fractures_val, a_l_val])
+                    P_curves_list.append(pD_sorted)
+                    Y_grids_list.append(Y_sorted)
+                    
+                except Exception as e:
+                    print(f"Пропущена скважина {idx} из-за ошибки: {e}")
+                    continue
+            
+            if len(param_grid) < 1:
+                self.show_info("Ошибка", 
+                    f"Недостаточно скважин для обучения. Найдено: {len(param_grid)}, требуется минимум 1.")
+                return
+            
+            # Создаём общую сетку Y (объединяем все Y и берём уникальные значения)
+            all_Y = np.concatenate(Y_grids_list)
+            Y_grid = np.unique(np.sort(all_Y))
+            
+            # Если сетка слишком большая, делаем её более разреженной
+            if len(Y_grid) > 1000:
+                # Берём логарифмически равномерную сетку
+                log_Y_min = np.log10(np.min(Y_grid[Y_grid > 0]))
+                log_Y_max = np.log10(np.max(Y_grid))
+                Y_grid = np.logspace(log_Y_min, log_Y_max, 500)
+            
+            # Интерполируем кривые pD на общую сетку Y
+            P_curves_interp = []
+            from scipy.interpolate import interp1d
+            
+            for i, (Y_orig, P_orig) in enumerate(zip(Y_grids_list, P_curves_list)):
+                try:
+                    # Интерполируем на общую сетку
+                    interp_func = interp1d(Y_orig, P_orig, kind='linear', 
+                                         bounds_error=False, fill_value=np.nan)
+                    P_interp = interp_func(Y_grid)
+                    P_curves_interp.append(P_interp)
+                except Exception as e:
+                    print(f"Ошибка интерполяции для скважины {i}: {e}")
+                    # Используем NaN для этой кривой
+                    P_curves_interp.append(np.full(len(Y_grid), np.nan))
+            
+            # Преобразуем в numpy массивы
+            param_grid = np.array(param_grid)  # Форма: (n_wells, 3)
+            P_curves = np.array(P_curves_interp)  # Форма: (n_wells, n_points)
+            
+            n_wells = len(param_grid)
+            
+            # Ветвление: если меньше 10 скважин, используем упрощённый RBF
+            if n_wells < 10:
+                # Обучаем RBF напрямую на имеющихся скважинах
+                from scipy.interpolate import RBFInterpolator
+                
+                # Создаём упрощённую модель для малого количества скважин
+                class SimpleRBFInterpolator:
+                    """Упрощённый RBF интерполятор для малого количества скважин"""
+                    def __init__(self, param_grid, Y_grid, P_curves):
+                        self.param_grid = param_grid
+                        self.Y_grid = Y_grid
+                        self.P_curves = P_curves
+                        self.rbf_models = []  # RBF модели для каждой точки Y
+                        self.is_fitted = True
+                        self.best_method = "rbf"
+                        self.n_wells = len(param_grid)
+                        
+                        # Специальный случай: одна скважина - просто возвращаем её кривую
+                        if self.n_wells == 1:
+                            # Сохраняем кривую единственной скважины
+                            self.single_curve = P_curves[0, :]
+                            return
+                        
+                        # Обучаем RBF для каждой точки Y_grid
+                        for i in range(len(Y_grid)):
+                            y_values = P_curves[:, i]
+                            valid_mask = ~np.isnan(y_values)
+                            
+                            if np.sum(valid_mask) < 1:
+                                # Нет данных для этой точки
+                                self.rbf_models.append(None)
+                                continue
+                            
+                            param_valid = param_grid[valid_mask]
+                            y_values_valid = y_values[valid_mask]
+                            
+                            # Если только одна скважина с данными, просто возвращаем её значение
+                            if len(param_valid) == 1:
+                                self.rbf_models.append(y_values_valid[0])  # Сохраняем значение
+                                continue
+                            
+                            try:
+                                # Пытаемся обучить RBF (нужно минимум 2 точки)
+                                if len(param_valid) >= 2:
+                                    # Для 2-3 точек используем линейную регрессию
+                                    if len(param_valid) < 4:
+                                        from sklearn.linear_model import LinearRegression
+                                        lr_model = LinearRegression().fit(param_valid, y_values_valid)
+                                        self.rbf_models.append(lr_model)
+                                    else:
+                                        # Для 4+ точек используем RBF
+                                        rbf_model = RBFInterpolator(param_valid, y_values_valid, kernel='thin_plate_spline')
+                                        self.rbf_models.append(rbf_model)
+                                else:
+                                    # Fallback: используем среднее значение
+                                    self.rbf_models.append(np.mean(y_values_valid))
+                            except Exception:
+                                # Fallback на линейную регрессию при ошибке
+                                try:
+                                    from sklearn.linear_model import LinearRegression
+                                    lr_model = LinearRegression().fit(param_valid, y_values_valid)
+                                    self.rbf_models.append(lr_model)
+                                except Exception:
+                                    # Если и это не работает, используем среднее
+                                    self.rbf_models.append(np.mean(y_values_valid))
+                    
+                    def predict(self, skin, N, a_L):
+                        """Предсказание для заданных параметров"""
+                        # Специальный случай: одна скважина - возвращаем её кривую
+                        if self.n_wells == 1:
+                            return pd.Series(self.single_curve, index=self.Y_grid, 
+                                            name=f"P_D(s={skin}, N={N}, a/L={a_L})")
+                        
+                        param = np.array([[skin, N, a_L]])
+                        predictions = []
+                        
+                        for i, model in enumerate(self.rbf_models):
+                            if model is None:
+                                predictions.append(np.nan)
+                            elif isinstance(model, (int, float, np.number)):
+                                # Просто значение (для случая с одной скважиной)
+                                predictions.append(float(model))
+                            elif isinstance(model, RBFInterpolator):
+                                try:
+                                    pred = model(param)[0]
+                                    predictions.append(pred)
+                                except Exception:
+                                    predictions.append(np.nan)
+                            else:
+                                # LinearRegression или другой sklearn модель
+                                try:
+                                    pred = model.predict(param)[0]
+                                    predictions.append(pred)
+                                except Exception:
+                                    predictions.append(np.nan)
+                        
+                        return pd.Series(predictions, index=self.Y_grid, 
+                                        name=f"P_D(s={skin}, N={N}, a/L={a_L})")
+                
+                model = SimpleRBFInterpolator(param_grid, Y_grid, P_curves)
+                method_info = f"RBF (упрощённый режим для {n_wells} скважин)"
+            else:
+                # Обычный режим: используем DimensionlessCurveInterpolator
+                model = DimensionlessCurveInterpolator(methods=("linear", "rbf"))
+                model.fit(param_grid, Y_grid, P_curves)
+                method_info = f"Лучший метод: {model.best_method}"
+            
+            self.trained_interpolation_model = model
+            self.trained_interpolation_model_path = None  # Сбрасываем путь
+            
+            # Обновляем статус
+            if hasattr(self, 'interpolar_model_status_label'):
+                n_points = len(Y_grid)
+                self.interpolar_model_status_label.setText(
+                    f"Обучена на {n_wells} скважинах, {n_points} точках"
+                )
+            
+            # Формируем сообщение
+            msg = f"Модель интерполяции обучена на {n_wells} скважинах.\n"
+            msg += f"Сетка Y: {len(Y_grid)} точек\n"
+            msg += f"{method_info}\n"
+            if hasattr(model, 'rmse_scores') and model.rmse_scores:
+                msg += f"RMSE: {model.rmse_scores.get(model.best_method, 'N/A')}"
+            
+            self.show_info("Успех", msg)
+            
+        except Exception as e:
+            self.show_info("Ошибка", f"Не удалось обучить модель интерполяции: {str(e)}")
+            import traceback
+            print(traceback.format_exc())
+    
+    def on_save_interpolator_model(self) -> None:
+        """Сохраняет обученную модель интерполяции в файл"""
+        if self.trained_interpolation_model is None:
+            self.show_info("Ошибка", "Нет обученной модели интерполяции для сохранения")
+            return
+        
+        try:
+            file_path, _ = QFileDialog.getSaveFileName(
+                self, "Сохранить модель интерполяции", "",
+                "Pickle Files (*.pkl);;All Files (*)"
+            )
+            
+            if not file_path:
+                return
+            
+            # Добавляем расширение, если его нет
+            if not file_path.endswith('.pkl'):
+                file_path += '.pkl'
+            
+            # Сохраняем модель
+            with open(file_path, 'wb') as f:
+                pickle.dump(self.trained_interpolation_model, f)
+            
+            self.trained_interpolation_model_path = file_path
+            
+            # Обновляем статус
+            if hasattr(self, 'interpolar_model_status_label'):
+                filename = os.path.basename(file_path)
+                self.interpolar_model_status_label.setText(f"Сохранена: {filename}")
+            
+            self.show_info("Успех", f"Модель интерполяции сохранена в файл:\n{file_path}")
+            
+        except Exception as e:
+            self.show_info("Ошибка", f"Не удалось сохранить модель интерполяции: {str(e)}")
+            import traceback
+            print(traceback.format_exc())
+    
+    def on_load_interpolator_model(self) -> None:
+        """Загружает модель интерполяции из файла"""
+        try:
+            file_path, _ = QFileDialog.getOpenFileName(
+                self, "Загрузить модель интерполяции", "",
+                "Pickle Files (*.pkl);;All Files (*)"
+            )
+            
+            if not file_path:
+                return
+            
+            # Загружаем модель
+            with open(file_path, 'rb') as f:
+                model = pickle.load(f)
+            
+            # Проверяем, что это правильный тип
+            # Может быть DimensionlessCurveInterpolator или SimpleRBFInterpolator
+            if not (isinstance(model, DimensionlessCurveInterpolator) or 
+                    (hasattr(model, 'is_fitted') and hasattr(model, 'predict') and hasattr(model, 'best_method'))):
+                self.show_info("Ошибка", "Загруженный файл не является моделью интерполяции")
+                return
+            
+            if not model.is_fitted:
+                self.show_info("Ошибка", "Загруженная модель не обучена")
+                return
+            
+            self.trained_interpolation_model = model
+            self.trained_interpolation_model_path = file_path
+            
+            # Обновляем статус
+            if hasattr(self, 'interpolar_model_status_label'):
+                filename = os.path.basename(file_path)
+                self.interpolar_model_status_label.setText(f"Загружена: {filename}")
+            
+            # Формируем информацию о модели
+            model_info = f"Метод: {model.best_method}\n"
+            if hasattr(model, 'param_grid') and model.param_grid is not None:
+                model_info += f"Обучающих примеров: {model.param_grid.shape[0]}\n"
+            if hasattr(model, 'Y_grid') and model.Y_grid is not None:
+                model_info += f"Точек в сетке Y: {len(model.Y_grid)}"
+            
+            self.show_info("Успех", 
+                f"Модель интерполяции загружена из файла:\n{file_path}\n\n{model_info}")
+            
+        except Exception as e:
+            self.show_info("Ошибка", f"Не удалось загрузить модель интерполяции: {str(e)}")
+            import traceback
+            print(traceback.format_exc())
+            
     def setup_event_handlers(self) -> None:
         """Настройка обработчиков событий"""
         # Временные ряды
@@ -1318,10 +1751,16 @@ class MyApp(QMainWindow, Ui_mainWindow):
         self.extrapolate_btn.clicked.connect(self.on_extrapolate_xy)
         self.fit_xy_btn.clicked.connect(self.on_fit_xy_curve)
         
+        # Управление моделью апроксимации (оригинальный кусок)
+        self.approx_train_model_btn.clicked.connect(self.on_train_interpolator)
+        self.approx_save_model_btn.clicked.connect(self.on_save_interpolator)
+        self.approx_load_model_btn.clicked.connect(self.on_load_interpolator)
+        
         # Управление моделью интерполяции
-        self.train_model_btn.clicked.connect(self.on_train_interpolator)
-        self.save_model_btn.clicked.connect(self.on_save_interpolator)
-        self.load_model_btn.clicked.connect(self.on_load_interpolator)
+        self.interpolar_train_model_btn.clicked.connect(self.on_train_interpolator_model)
+        self.interpolar_save_model_btn.clicked.connect(self.on_save_interpolator_model)
+        self.interpolar_load_model_btn.clicked.connect(self.on_load_interpolator_model)
+        
         
         # Кнопка сброса графиков
         self.reset_plots_btn.clicked.connect(self.on_reset_plots)
@@ -1656,7 +2095,11 @@ class MyApp(QMainWindow, Ui_mainWindow):
             method_names = {
                 'linear': 'Линейная регрессия',
                 'rbf': 'RBF интерполяция (Thin Plate Spline)',
-                'gp': 'Гауссовский процесс'
+                'gp': 'Гауссовский процесс',
+                'quadratic_regression': 'Квадратичная регрессия',
+                'local_pchip': 'Локальная PCHIP интерполяция',
+                'trained_model': 'Обученная модель',
+                'trained_interpolation_model': 'Модель интерполяции'
             }
             best_rmse = interp_info['rmse_scores'].get(interp_info['best_method'], 0)
             quality = self._get_quality_label(best_rmse)
@@ -1805,11 +2248,17 @@ class MyApp(QMainWindow, Ui_mainWindow):
             self.show_warning("Ошибка", "Нет данных для подгонки")
             return
         
-        # Проверяем наличие X и Y в данных
-        if not (hasattr(self.current_data, 'X') and self.current_data.X is not None and
-                hasattr(self.current_data, 'Y') and self.current_data.Y is not None):
-            self.show_warning("Ошибка", "В данных отсутствуют X и Y. Невозможно выполнить подгонку.")
-            return
+        # Проверяем, есть ли обученная модель
+        has_trained_model = (self.trained_interpolator is not None and 
+                            isinstance(self.trained_interpolator, QuadraticRegressionModel) and
+                            self.trained_interpolator.is_fitted)
+        
+        # Если модель не обучена, проверяем наличие X и Y в данных (они нужны для локальной подгонки)
+        if not has_trained_model:
+            if not (hasattr(self.current_data, 'X') and self.current_data.X is not None and
+                    hasattr(self.current_data, 'Y') and self.current_data.Y is not None):
+                self.show_warning("Ошибка", "В данных отсутствуют X и Y. Невозможно выполнить подгонку без обученной модели.")
+                return
         
         try:
             # Получаем параметры скважины
@@ -1823,36 +2272,44 @@ class MyApp(QMainWindow, Ui_mainWindow):
             # Сохраняем оригинальные расчётные значения
             self.original_calc_XY = (dim_data.X.copy(), dim_data.Y.copy())
             
-            # Получаем эталонные значения из данных
-            X_data = self.current_data.X.values
-            Y_data = self.current_data.Y.values
+            # Получаем эталонные значения из данных (если есть)
+            has_reference_xy = (hasattr(self.current_data, 'X') and self.current_data.X is not None and
+                               hasattr(self.current_data, 'Y') and self.current_data.Y is not None)
+            
             X_calc = dim_data.X
             Y_calc = dim_data.Y
             
             # Используем обученную модель, если она есть
-            if (self.trained_interpolator is not None and 
-                isinstance(self.trained_interpolator, QuadraticRegressionModel) and
-                self.trained_interpolator.is_fitted):
+            if has_trained_model:
                 # Используем обученную модель для подгонки
                 X_fitted, Y_fitted = self.trained_interpolator.predict(X_calc, Y_calc)
                 
-                # Вычисляем метрики
-                mask = np.isfinite(X_data) & np.isfinite(Y_data) & np.isfinite(X_fitted) & np.isfinite(Y_fitted)
-                if np.any(mask):
-                    rmse_y = np.sqrt(np.mean((Y_data[mask] - Y_fitted[mask]) ** 2))
-                    rmse_x = np.sqrt(np.mean((X_data[mask] - X_fitted[mask]) ** 2))
-                    
-                    y_mean = np.mean(Y_data[mask])
-                    ss_tot = np.sum((Y_data[mask] - y_mean) ** 2)
-                    r2_y = 1 - np.sum((Y_data[mask] - Y_fitted[mask]) ** 2) / ss_tot if ss_tot > 0 else 0.0
-                    
-                    y_range = np.max(Y_data[mask]) - np.min(Y_data[mask])
-                    accuracy = max(0, (1 - rmse_y / y_range) * 100) if y_range > 0 else 0.0
+                # Вычисляем метрики только если есть эталонные данные
+                if has_reference_xy:
+                    X_data = self.current_data.X.values
+                    Y_data = self.current_data.Y.values
+                    mask = np.isfinite(X_data) & np.isfinite(Y_data) & np.isfinite(X_fitted) & np.isfinite(Y_fitted)
+                    if np.any(mask):
+                        rmse_y = np.sqrt(np.mean((Y_data[mask] - Y_fitted[mask]) ** 2))
+                        rmse_x = np.sqrt(np.mean((X_data[mask] - X_fitted[mask]) ** 2))
+                        
+                        y_mean = np.mean(Y_data[mask])
+                        ss_tot = np.sum((Y_data[mask] - y_mean) ** 2)
+                        r2_y = 1 - np.sum((Y_data[mask] - Y_fitted[mask]) ** 2) / ss_tot if ss_tot > 0 else 0.0
+                        
+                        y_range = np.max(Y_data[mask]) - np.min(Y_data[mask])
+                        accuracy = max(0, (1 - rmse_y / y_range) * 100) if y_range > 0 else 0.0
+                    else:
+                        rmse_y = np.inf
+                        rmse_x = np.inf
+                        r2_y = 0.0
+                        accuracy = 0.0
                 else:
-                    rmse_y = np.inf
-                    rmse_x = np.inf
-                    r2_y = 0.0
-                    accuracy = 0.0
+                    # Если нет эталонных данных, метрики не вычисляем
+                    rmse_y = np.nan
+                    rmse_x = np.nan
+                    r2_y = np.nan
+                    accuracy = np.nan
                 
                 coef = self.trained_interpolator.get_coefficients()
                 
@@ -1873,6 +2330,9 @@ class MyApp(QMainWindow, Ui_mainWindow):
                 }
             else:
                 # Используем старый метод подгонки для одной скважины
+                # В этом блоке X_data и Y_data всегда должны быть, так как проверка выполнена выше
+                X_data = self.current_data.X.values
+                Y_data = self.current_data.Y.values
                 fit_result = fit_xy_curve_coefficients(X_data, Y_data, X_calc, Y_calc, fit_only_y=False)
             
             # Сохраняем результаты (коэффициенты будут применяться автоматически при построении графиков)
@@ -1914,10 +2374,24 @@ class MyApp(QMainWindow, Ui_mainWindow):
                 report += f"   ⚠️ c был ограничен до [-0.2, 0.2]\n"
             if fit_result.get('fallback_used', False):
                 report += f"   ⚠️ Использован fallback (c=0) из-за ухудшения RMSE\n"
-            report += f"   RMSE до подгонки = {fit_result.get('rmse_before', fit_result['rmse']):.4e}\n"
-            report += f"   RMSE после подгонки = {fit_result['rmse']:.4e}\n"
-            report += f"   Точность = {fit_result['accuracy']:.2f}%\n"
-            report += f"   R² = {fit_result['r2']:.4f}\n\n"
+            # Выводим метрики только если они вычислены
+            if not (has_trained_model and not has_reference_xy):
+                rmse_before = fit_result.get('rmse_before', fit_result['rmse'])
+                rmse_after = fit_result['rmse']
+                accuracy = fit_result['accuracy']
+                r2 = fit_result['r2']
+                
+                if not (np.isnan(rmse_before) or np.isinf(rmse_before)):
+                    report += f"   RMSE до подгонки = {rmse_before:.4e}\n"
+                if not (np.isnan(rmse_after) or np.isinf(rmse_after)):
+                    report += f"   RMSE после подгонки = {rmse_after:.4e}\n"
+                if not (np.isnan(accuracy) or np.isinf(accuracy)):
+                    report += f"   Точность = {accuracy:.2f}%\n"
+                if not (np.isnan(r2) or np.isinf(r2)):
+                    report += f"   R² = {r2:.4f}\n"
+            else:
+                report += f"   ⚠️ Метрики не вычислены (отсутствуют эталонные X-Y в данных)\n"
+            report += "\n"
             report += "📘 Итоговая аппроксимирующая формула:\n"
             report += f"   X_fit = {fit_result['a']:.3g} * (0.00864 * k * h * ΔP / (μ * B * Q))\n"
             if abs(c_val) < 1e-10:
@@ -1945,9 +2419,15 @@ class MyApp(QMainWindow, Ui_mainWindow):
             else:
                 model_info = "\n(Использована локальная подгонка для текущей скважины)"
             
+            # Формируем сообщение с метриками
+            metrics_msg = ""
+            if not (has_trained_model and not has_reference_xy):
+                accuracy = fit_result['accuracy']
+                if not (np.isnan(accuracy) or np.isinf(accuracy)):
+                    metrics_msg = f"\nТочность: {accuracy:.2f}%"
+            
             self.show_info("Подгонка выполнена", 
-                         f"Коэффициенты: a={fit_result['a']:.3g}, b={fit_result['b']:.3g}, c={c_val:.3g}\n"
-                         f"Точность: {fit_result['accuracy']:.2f}%\n"
+                         f"Коэффициенты: a={fit_result['a']:.3g}, b={fit_result['b']:.3g}, c={c_val:.3g}{metrics_msg}\n"
                          f"Коэффициенты сохранены и будут применяться автоматически.{model_info}")
             
         except Exception as e:

@@ -271,8 +271,14 @@ class DimensionlessCurveInterpolator:
             
             if not is_stable and stability_checks > 0:
                 # Логируем информацию для отладки
-                avg_max_jump = np.mean([f["max_jump"] for failures in stability_failures.get(method, []) for f in failures]) if method in stability_failures else 0
-                avg_max_dd = np.mean([f["max_second_derivative"] for failures in stability_failures.get(method, []) for f in failures]) if method in stability_failures else 0
+                # stability_failures[method] - это список словарей, а не список списков
+                failures_list = stability_failures.get(method, [])
+                if failures_list:
+                    avg_max_jump = np.mean([f["max_jump"] for f in failures_list])
+                    avg_max_dd = np.mean([f["max_second_derivative"] for f in failures_list])
+                else:
+                    avg_max_jump = 0.0
+                    avg_max_dd = 0.0
                 print(f"Метод '{method}': стабильность {stability_passes}/{stability_checks} ({stability_ratio:.1%}), "
                       f"средний max_jump={avg_max_jump:.2f}, средний max_dd={avg_max_dd:.2f}")
 
@@ -529,15 +535,7 @@ class DimensionlessCurveInterpolator:
             raise ValueError("Skin вне реалистичного диапазона (-10..50)")
         if param_grid.shape[1] >= 2 and (np.any(param_grid[:, 1] < 1) or np.any(param_grid[:, 1] > 100)):
             raise ValueError("N вне диапазона 1..100")
-        if param_grid.shape[1] >= 3:
-            # Для a/L: обрезаем значения до допустимого диапазона вместо выброса ошибки
-            invalid_a_l = (param_grid[:, 2] < 0) | (param_grid[:, 2] > 1)
-            if np.any(invalid_a_l):
-                n_invalid = np.sum(invalid_a_l)
-                print(f"Предупреждение: {n_invalid} кривых с a/L вне диапазона [0, 1]. "
-                      f"Значения будут обрезаны до допустимого диапазона.")
-                # Обрезаем значения до [0, 1]
-                param_grid[:, 2] = np.clip(param_grid[:, 2], 0.0, 1.0)
+        # Не обрезаем a/L - используем значения как есть
         if np.any(P_curves < 0):
             # Обрезаем отрицательные значения
             P_curves[P_curves < 0] = 0.0
