@@ -14,7 +14,7 @@ import pickle
 import os
 
 
-from ui import Ui_mainWindow
+from ui import Ui_MainWindow
 
 from helpers.parse_well_data import parse_well_data
 from helpers.ml_methods import (detect_outliers)
@@ -32,11 +32,11 @@ from schemas.well_data import WellTimeSeries
 from helpers.input_test import diag_dimensional
 from helpers.ui_setup import (
     setup_interface,
-    setup_timeseries_tab,
-    setup_grp_tab,
-    setup_type_curves_tab,
-    setup_results_tab,
-    setup_data_tab
+    # setup_timeseries_tab,
+    # setup_grp_tab,
+    # setup_type_curves_tab,
+    # setup_results_tab,
+    # setup_data_tab
 )
 
 # Импорт констант из config.py
@@ -53,7 +53,7 @@ from config import (
 
 
 
-class MyApp(QMainWindow, Ui_mainWindow):
+class MyApp(QMainWindow, Ui_MainWindow):
     def __init__(self, test_mode: bool = False) -> None:
         super().__init__()
         self.setupUi(self)
@@ -1707,12 +1707,12 @@ class MyApp(QMainWindow, Ui_mainWindow):
     def setup_event_handlers(self) -> None:
         """Настройка обработчиков событий"""
         # Временные ряды
-        self.plot_btn.clicked.connect(self.on_plot_dimensionless_selected)
+        # self.plot_btn.clicked.connect(self.on_plot_dimensionless_selected)
         self.interp_btn.clicked.connect(self.on_interpolate_data)
         self.ml_filter_btn.clicked.connect(self.on_ml_filter)
         self.outlier_btn.clicked.connect(self.on_detect_outliers)
         self.export_btn.clicked.connect(self.on_export_data)
-        self.load_validation_button.clicked.connect(self.load_validation_file)
+        # self.load_validation_button.clicked.connect(self.load_validation_file)
         self.extrapolate_btn.clicked.connect(self.on_extrapolate_xy)
         self.fit_xy_btn.clicked.connect(self.on_fit_xy_curve)
         
@@ -1762,8 +1762,8 @@ class MyApp(QMainWindow, Ui_mainWindow):
         # Результаты
         self.export_report_btn.clicked.connect(self.on_export_report)
 
-        self.data_tab = setup_data_tab(self)
-        self.tab_widget.addTab(self.data_tab, "Загруженные данные")
+        # self.data_tab = setup_data_tab(self)
+        # self.tab_widget.addTab(self.data_tab, "Загруженные данные")
 
     def _load_data_file(self, target: str = 'main') -> None:
         """
