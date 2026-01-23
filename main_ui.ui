@@ -2,12 +2,15 @@
 <ui version="4.0">
  <class>MainWindow</class>
  <widget class="QMainWindow" name="MainWindow">
+  <property name="windowModality">
+   <enum>Qt::WindowModality::NonModal</enum>
+  </property>
   <property name="geometry">
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>1400</width>
-    <height>900</height>
+    <width>1920</width>
+    <height>1080</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -290,117 +293,265 @@
        </attribute>
        <layout class="QVBoxLayout">
         <item>
-         <widget class="QGroupBox" name="groupBox">
+         <widget class="QGroupBox" name="control_gbox">
+          <property name="sizePolicy">
+           <sizepolicy hsizetype="Expanding" vsizetype="Maximum">
+            <horstretch>0</horstretch>
+            <verstretch>0</verstretch>
+           </sizepolicy>
+          </property>
+          <property name="minimumSize">
+           <size>
+            <width>0</width>
+            <height>346</height>
+           </size>
+          </property>
           <property name="title">
            <string>Управление</string>
           </property>
-          <widget class="QPushButton" name="plot_btn">
-           <property name="geometry">
-            <rect>
-             <x>13</x>
-             <y>134</y>
-             <width>130</width>
-             <height>26</height>
-            </rect>
-           </property>
-           <property name="text">
-            <string>Построить график</string>
-           </property>
-          </widget>
-          <widget class="QGroupBox" name="groupBox_4">
-           <property name="geometry">
-            <rect>
-             <x>520</x>
-             <y>40</y>
-             <width>641</width>
-             <height>201</height>
-            </rect>
-           </property>
-           <property name="title">
-            <string/>
-           </property>
-          </widget>
-          <widget class="QWidget" name="">
-           <property name="geometry">
-            <rect>
-             <x>14</x>
-             <y>35</y>
-             <width>162</width>
-             <height>92</height>
-            </rect>
-           </property>
-           <layout class="QGridLayout" name="gridLayout_3">
-            <item row="0" column="0">
-             <widget class="QPushButton" name="ml_filter_btn">
+          <layout class="QHBoxLayout" name="horizontalLayout_5">
+           <item>
+            <layout class="QVBoxLayout" name="verticalLayout_4">
+             <property name="sizeConstraint">
+              <enum>QLayout::SizeConstraint::SetMinimumSize</enum>
+             </property>
+             <item>
+              <widget class="QPushButton" name="extrapolate_btn">
+               <property name="sizePolicy">
+                <sizepolicy hsizetype="Preferred" vsizetype="Maximum">
+                 <horstretch>0</horstretch>
+                 <verstretch>0</verstretch>
+                </sizepolicy>
+               </property>
+               <property name="text">
+                <string>Экстраполировать  X-Y</string>
+               </property>
+              </widget>
+             </item>
+             <item>
+              <widget class="QPushButton" name="interp_btn">
+               <property name="sizePolicy">
+                <sizepolicy hsizetype="Preferred" vsizetype="Maximum">
+                 <horstretch>0</horstretch>
+                 <verstretch>0</verstretch>
+                </sizepolicy>
+               </property>
+               <property name="text">
+                <string>Интерполировать пропупуски</string>
+               </property>
+              </widget>
+             </item>
+             <item>
+              <widget class="QPushButton" name="ml_filter_btn">
+               <property name="sizePolicy">
+                <sizepolicy hsizetype="Preferred" vsizetype="Maximum">
+                 <horstretch>0</horstretch>
+                 <verstretch>0</verstretch>
+                </sizepolicy>
+               </property>
+               <property name="text">
+                <string>ML фильтрация</string>
+               </property>
+              </widget>
+             </item>
+             <item>
+              <widget class="QPushButton" name="outlier_btn">
+               <property name="sizePolicy">
+                <sizepolicy hsizetype="Preferred" vsizetype="Maximum">
+                 <horstretch>0</horstretch>
+                 <verstretch>0</verstretch>
+                </sizepolicy>
+               </property>
+               <property name="text">
+                <string>Обнаружить выбросы</string>
+               </property>
+              </widget>
+             </item>
+             <item>
+              <widget class="QPushButton" name="fit_xy_btn">
+               <property name="sizePolicy">
+                <sizepolicy hsizetype="Preferred" vsizetype="Maximum">
+                 <horstretch>0</horstretch>
+                 <verstretch>0</verstretch>
+                </sizepolicy>
+               </property>
+               <property name="text">
+                <string>Аппроксимировать X-Y</string>
+               </property>
+              </widget>
+             </item>
+             <item>
+              <widget class="QPushButton" name="export_btn">
+               <property name="sizePolicy">
+                <sizepolicy hsizetype="Preferred" vsizetype="Maximum">
+                 <horstretch>0</horstretch>
+                 <verstretch>0</verstretch>
+                </sizepolicy>
+               </property>
+               <property name="text">
+                <string>Экспортировать данные</string>
+               </property>
+              </widget>
+             </item>
+            </layout>
+           </item>
+           <item>
+            <widget class="QGroupBox" name="groupBox_2">
+             <property name="sizePolicy">
+              <sizepolicy hsizetype="Expanding" vsizetype="Expanding">
+               <horstretch>0</horstretch>
+               <verstretch>0</verstretch>
+              </sizepolicy>
+             </property>
+             <property name="minimumSize">
+              <size>
+               <width>0</width>
+               <height>150</height>
+              </size>
+             </property>
+             <property name="title">
+              <string>Реальные данные</string>
+             </property>
+             <widget class="QPushButton" name="plot_btn">
+              <property name="geometry">
+               <rect>
+                <x>130</x>
+                <y>90</y>
+                <width>130</width>
+                <height>26</height>
+               </rect>
+              </property>
               <property name="text">
-               <string>ML фильтрация</string>
+               <string>Построить график</string>
               </property>
              </widget>
-            </item>
-            <item row="1" column="0">
-             <widget class="QPushButton" name="fit_xy_btn">
-              <property name="text">
-               <string>Аппроксимировать X-Y</string>
+             <widget class="QGraphicsView" name="graphicsView">
+              <property name="geometry">
+               <rect>
+                <x>270</x>
+                <y>40</y>
+                <width>521</width>
+                <height>211</height>
+               </rect>
               </property>
              </widget>
-            </item>
-            <item row="2" column="0">
-             <widget class="QPushButton" name="extrapolate_btn">
-              <property name="text">
-               <string>Экстраполировать  X-Y</string>
-              </property>
-             </widget>
-            </item>
-           </layout>
-          </widget>
-          <widget class="QWidget" name="">
-           <property name="geometry">
-            <rect>
-             <x>182</x>
-             <y>35</y>
-             <width>206</width>
-             <height>92</height>
-            </rect>
-           </property>
-           <layout class="QGridLayout" name="gridLayout_4">
-            <item row="3" column="0">
-             <widget class="QPushButton" name="export_btn">
-              <property name="text">
-               <string>Экспортировать данные</string>
-              </property>
-             </widget>
-            </item>
-            <item row="1" column="0">
-             <widget class="QPushButton" name="outlier_btn">
-              <property name="text">
-               <string>Обнаружить выбросы</string>
-              </property>
-             </widget>
-            </item>
-            <item row="0" column="0">
-             <widget class="QPushButton" name="interp_btn">
-              <property name="text">
-               <string>Интерполировать пропупуски</string>
-              </property>
-             </widget>
-            </item>
-           </layout>
-          </widget>
+            </widget>
+           </item>
+          </layout>
          </widget>
         </item>
         <item>
-         <widget class="QGroupBox" name="groupBox_2">
+         <widget class="QGroupBox" name="dimensionless_gbox">
           <property name="title">
-           <string>Реальные данные</string>
+           <string>Расчетные данные</string>
           </property>
-         </widget>
-        </item>
-        <item>
-         <widget class="QGroupBox" name="data_control_group">
-          <property name="title">
-           <string>Безразмерные графики</string>
-          </property>
-          <layout class="QGridLayout"/>
+          <layout class="QHBoxLayout" name="horizontalLayout_6">
+           <item>
+            <layout class="QVBoxLayout" name="verticalLayout_7">
+             <item>
+              <widget class="QGroupBox" name="groupBox">
+               <property name="title">
+                <string>Безразмерные графики (log-log)</string>
+               </property>
+               <property name="flat">
+                <bool>false</bool>
+               </property>
+               <layout class="QVBoxLayout" name="verticalLayout_5">
+                <item>
+                 <widget class="QCheckBox" name="cb_dim_pD">
+                  <property name="text">
+                   <string>pD(Y)</string>
+                  </property>
+                 </widget>
+                </item>
+                <item>
+                 <widget class="QCheckBox" name="cb_dim_dpD">
+                  <property name="text">
+                   <string>dp(D)/dlog(Y)</string>
+                  </property>
+                 </widget>
+                </item>
+                <item>
+                 <widget class="QCheckBox" name="cb_dim_tD">
+                  <property name="text">
+                   <string>tD(~Y)</string>
+                  </property>
+                 </widget>
+                </item>
+                <item>
+                 <widget class="QCheckBox" name="cb_dim_CD">
+                  <property name="text">
+                   <string>CD(Емкость)</string>
+                  </property>
+                 </widget>
+                </item>
+                <item>
+                 <widget class="QCheckBox" name="cb_XY_plot">
+                  <property name="text">
+                   <string>Исходные X-Y</string>
+                  </property>
+                 </widget>
+                </item>
+                <item>
+                 <widget class="QCheckBox" name="cb_calc_XY">
+                  <property name="text">
+                   <string>Расчетные X-Y</string>
+                  </property>
+                 </widget>
+                </item>
+               </layout>
+              </widget>
+             </item>
+             <item>
+              <widget class="QGroupBox" name="groupBox_4">
+               <property name="title">
+                <string>Типовые кривые</string>
+               </property>
+               <layout class="QVBoxLayout" name="verticalLayout_6">
+                <item>
+                 <widget class="QCheckBox" name="cb_gfunc">
+                  <property name="text">
+                   <string>G-функция(Nolte)</string>
+                  </property>
+                 </widget>
+                </item>
+                <item>
+                 <widget class="QCheckBox" name="cb_mbt">
+                  <property name="text">
+                   <string>Время материального баланса</string>
+                  </property>
+                 </widget>
+                </item>
+                <item>
+                 <widget class="QCheckBox" name="cb_type_gry">
+                  <property name="text">
+                   <string>Линейный режим</string>
+                  </property>
+                 </widget>
+                </item>
+                <item>
+                 <widget class="QCheckBox" name="cb_type_cinco_2">
+                  <property name="text">
+                   <string>Билинейный режим</string>
+                  </property>
+                 </widget>
+                </item>
+                <item>
+                 <widget class="QCheckBox" name="cb_type_valko">
+                  <property name="text">
+                   <string>Псевдорадиальный режим</string>
+                  </property>
+                 </widget>
+                </item>
+               </layout>
+              </widget>
+             </item>
+            </layout>
+           </item>
+           <item>
+            <widget class="QGraphicsView" name="dim_plot"/>
+           </item>
+          </layout>
          </widget>
         </item>
        </layout>
