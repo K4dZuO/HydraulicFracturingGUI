@@ -14,6 +14,12 @@ import pyqtgraph as pg
 if TYPE_CHECKING:
     from main import MyApp
 
+import pyqtgraph as pg
+from PySide6.QtWidgets import QGraphicsScene
+
+import pyqtgraph as pg
+from PySide6.QtWidgets import QWidget, QVBoxLayout
+
 
 def setup_interface(app: 'MyApp') -> None:
     """
@@ -31,40 +37,38 @@ def setup_interface(app: 'MyApp') -> None:
 # Безразмерные кривые
 # ------------------------------------------------------------------
 
+
+def attach_pg_to_widget(container: QWidget) -> pg.PlotItem:
+    """
+    Встраивает pyqtgraph в QWidget из .ui
+    и возвращает PlotItem для рисования
+    """
+    if container is None:
+        raise RuntimeError("Graph container widget not found")
+
+    layout = container.layout()
+    if layout is None:
+        layout = QVBoxLayout(container)
+        layout.setContentsMargins(0, 0, 0, 0)
+
+    plot_widget = pg.PlotWidget()
+    plot_widget.showGrid(x=True, y=True)
+
+    layout.addWidget(plot_widget)
+
+    return plot_widget.getPlotItem()
+
+
 def setup_timeseries_tab(app: 'MyApp') -> None:
-    # placeholders
-    controls_placeholder = app.findChild(
-        QWidget, "timeseries_controls_placeholder"
+    app.P_graphic = attach_pg_to_widget(
+        app.findChild(QWidget, "p_graphic")
     )
-    plot_placeholder = app.findChild(
-        QWidget, "dimensionless_plot_placeholder"
+    app.Q_graphic = attach_pg_to_widget(
+        app.findChild(QWidget, "q_graphic")
     )
-
-    # --- Левая панель управления ---
-    # ВАЖНО: layout уже есть в .ui
-    controls_layout = controls_placeholder.layout()
-    if controls_layout is None:
-        controls_layout = QVBoxLayout(controls_placeholder)
-
-    # Все кнопки УЖЕ существуют в .ui,
-    # здесь мы их не создаём, только используем позже в handlers
-
-    # --- График ---
-    plot_layout = plot_placeholder.layout()
-    if plot_layout is None:
-        plot_layout = QVBoxLayout(plot_placeholder)
-
-    app.dimensionless_plot = pg.PlotWidget()
-    app.dimensionless_plot.showGrid(x=True, y=True)
-    app.dimensionless_plot.setLabel(
-        'bottom', 'X безразмерный фильтрационный параметр'
+    app.dim_plot = attach_pg_to_widget(
+        app.findChild(QWidget, "dim_plot")
     )
-    app.dimensionless_plot.setLabel(
-        'left', 'Y безразмерный ёмкостной параметр'
-    )
-    app.dimensionless_plot.setTitle("Безразмерные кривые МГРП")
-
-    plot_layout.addWidget(app.dimensionless_plot)
 
 
 # ------------------------------------------------------------------

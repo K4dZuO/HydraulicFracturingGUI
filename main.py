@@ -1748,16 +1748,16 @@ class MyApp(QMainWindow, Ui_MainWindow):
         self.cb_real_p.stateChanged.connect(self.on_checkbox_toggled)
         self.cb_real_q.stateChanged.connect(self.on_checkbox_toggled)
         
-        # Анализ ГРП
-        self.flow_regime_btn.clicked.connect(self.on_analyze_flow_regime)
-        self.productivity_btn.clicked.connect(self.on_compute_productivity_index)
-        self.transitions_btn.clicked.connect(self.on_detect_flow_regime_transitions)
+        # # Анализ ГРП
+        # self.flow_regime_btn.clicked.connect(self.on_analyze_flow_regime)
+        # self.productivity_btn.clicked.connect(self.on_compute_productivity_index)
+        # self.transitions_btn.clicked.connect(self.on_detect_flow_regime_transitions)
         
-        # Эталонные кривые
-        self.bilinear_btn.clicked.connect(self.on_plot_bilinear)
-        self.linear_btn.clicked.connect(self.on_plot_linear)
-        self.pseudoradial_btn.clicked.connect(self.on_plot_pseudoradial)
-        self.match_curves_btn.clicked.connect(self.on_match_type_curves)
+        # # Эталонные кривые
+        # self.bilinear_btn.clicked.connect(self.on_plot_bilinear)
+        # self.linear_btn.clicked.connect(self.on_plot_linear)
+        # self.pseudoradial_btn.clicked.connect(self.on_plot_pseudoradial)
+        # self.match_curves_btn.clicked.connect(self.on_match_type_curves)
         
         # Результаты
         self.export_report_btn.clicked.connect(self.on_export_report)
@@ -2081,12 +2081,12 @@ class MyApp(QMainWindow, Ui_MainWindow):
     def reset_plots(self) -> None:
         """Сброс всех графиков и чекбоксов"""
         # Очищаем график
-        if hasattr(self, 'dimensionless_plot'):
-            self.dimensionless_plot.clear()
-            self.dimensionless_plot.setLabel('bottom', 'X (безразмерный фильтрационный параметр)')
-            self.dimensionless_plot.setLabel('left', 'Безразмерный параметр')
-            self.dimensionless_plot.setTitle("Безразмерные кривые МГРП")
-            self.dimensionless_plot.showGrid(x=True, y=True)
+        if hasattr(self, 'dim_plot'):
+            self.dim_plot.clear()
+            self.dim_plot.setLabel('bottom', 'X (безразмерный фильтрационный параметр)')
+            self.dim_plot.setLabel('left', 'Безразмерный параметр')
+            self.dim_plot.setTitle("Безразмерные кривые МГРП")
+            self.dim_plot.showGrid(x=True, y=True)
         
         # Снимаем все чекбоксы
         if hasattr(self, 'cb_dim_pD'):
@@ -2402,7 +2402,7 @@ class MyApp(QMainWindow, Ui_MainWindow):
     
     def on_plot_dimensionless_selected(self) -> None:
         """Обработка нажатия на кнопку 'Построить график'."""
-        self.dimensionless_plot.clear()
+        self.dim_plot.clear()
         # Не очищаем text_report полностью, чтобы сохранить отчёт о подгонке
 
         current_item = self.current_data
@@ -2588,7 +2588,7 @@ class MyApp(QMainWindow, Ui_MainWindow):
             # Расчётные X и Y можно отображать независимо через чекбокс "Отобразить расчётные X и Y"
             
             plot_dimensionless_grouped(
-                plot_widget=self.dimensionless_plot,
+                plot_widget=self.dim_plot,
                 dim_data=dim_data,
                 time=current_item.time,
                 pressure=current_item.pressure,

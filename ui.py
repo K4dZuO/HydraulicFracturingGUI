@@ -15,24 +15,24 @@ from PySide6.QtGui import (QBrush, QColor, QConicalGradient, QCursor,
     QFont, QFontDatabase, QGradient, QIcon,
     QImage, QKeySequence, QLinearGradient, QPainter,
     QPalette, QPixmap, QRadialGradient, QTransform)
-from PySide6.QtWidgets import (QApplication, QDoubleSpinBox, QGridLayout, QGroupBox,
-    QHBoxLayout, QLabel, QMainWindow, QPushButton,
-    QSizePolicy, QSpinBox, QStatusBar, QTabWidget,
-    QTextEdit, QVBoxLayout, QWidget)
+from PySide6.QtWidgets import (QApplication, QCheckBox, QComboBox, QDoubleSpinBox,
+    QGridLayout, QGroupBox, QHBoxLayout, QLabel,
+    QLayout, QMainWindow, QPushButton, QSizePolicy,
+    QSpinBox, QStatusBar, QTabWidget, QTextEdit,
+    QVBoxLayout, QWidget)
 
 class Ui_MainWindow(object):
     def setupUi(self, MainWindow):
         if not MainWindow.objectName():
             MainWindow.setObjectName(u"MainWindow")
-        MainWindow.resize(1400, 900)
+        MainWindow.setWindowModality(Qt.WindowModality.NonModal)
+        MainWindow.resize(1920, 1080)
         self.centralwidget = QWidget(MainWindow)
         self.centralwidget.setObjectName(u"centralwidget")
-        self.horizontalLayout_3 = QHBoxLayout(self.centralwidget)
-        self.horizontalLayout_3.setObjectName(u"horizontalLayout_3")
-        self.horizontalLayout_2 = QHBoxLayout()
-        self.horizontalLayout_2.setObjectName(u"horizontalLayout_2")
-        self.handle_menu = QVBoxLayout()
-        self.handle_menu.setObjectName(u"handle_menu")
+        self.horizontalLayout_4 = QHBoxLayout(self.centralwidget)
+        self.horizontalLayout_4.setObjectName(u"horizontalLayout_4")
+        self.verticalLayout = QVBoxLayout()
+        self.verticalLayout.setObjectName(u"verticalLayout")
         self.horizontalLayout = QHBoxLayout()
         self.horizontalLayout.setObjectName(u"horizontalLayout")
         self.load_template_button = QPushButton(self.centralwidget)
@@ -40,35 +40,60 @@ class Ui_MainWindow(object):
 
         self.horizontalLayout.addWidget(self.load_template_button)
 
-        self.label = QLabel(self.centralwidget)
-        self.label.setObjectName(u"label")
+        self.load_file_label = QLabel(self.centralwidget)
+        self.load_file_label.setObjectName(u"load_file_label")
+        sizePolicy = QSizePolicy(QSizePolicy.Policy.Minimum, QSizePolicy.Policy.Minimum)
+        sizePolicy.setHorizontalStretch(0)
+        sizePolicy.setVerticalStretch(0)
+        sizePolicy.setHeightForWidth(self.load_file_label.sizePolicy().hasHeightForWidth())
+        self.load_file_label.setSizePolicy(sizePolicy)
+        self.load_file_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
 
-        self.horizontalLayout.addWidget(self.label)
+        self.horizontalLayout.addWidget(self.load_file_label)
 
 
-        self.handle_menu.addLayout(self.horizontalLayout)
+        self.verticalLayout.addLayout(self.horizontalLayout)
 
         self.params_group = QGroupBox(self.centralwidget)
         self.params_group.setObjectName(u"params_group")
         self.gridLayout = QGridLayout(self.params_group)
         self.gridLayout.setObjectName(u"gridLayout")
-        self.w_label = QLabel(self.params_group)
-        self.w_label.setObjectName(u"w_label")
-
-        self.gridLayout.addWidget(self.w_label, 0, 0, 1, 1)
-
-        self.width_doubleSpinBox = QDoubleSpinBox(self.params_group)
-        self.width_doubleSpinBox.setObjectName(u"width_doubleSpinBox")
-
-        self.gridLayout.addWidget(self.width_doubleSpinBox, 0, 1, 1, 1)
-
         self.thickness_label = QLabel(self.params_group)
         self.thickness_label.setObjectName(u"thickness_label")
 
         self.gridLayout.addWidget(self.thickness_label, 1, 0, 1, 1)
 
+        self.n_spinBox = QSpinBox(self.params_group)
+        self.n_spinBox.setObjectName(u"n_spinBox")
+        self.n_spinBox.setReadOnly(True)
+
+        self.gridLayout.addWidget(self.n_spinBox, 4, 1, 1, 1)
+
+        self.skin_label = QLabel(self.params_group)
+        self.skin_label.setObjectName(u"skin_label")
+
+        self.gridLayout.addWidget(self.skin_label, 3, 0, 1, 1)
+
+        self.n_label = QLabel(self.params_group)
+        self.n_label.setObjectName(u"n_label")
+
+        self.gridLayout.addWidget(self.n_label, 4, 0, 1, 1)
+
+        self.skin_doubleSpinBox = QDoubleSpinBox(self.params_group)
+        self.skin_doubleSpinBox.setObjectName(u"skin_doubleSpinBox")
+        self.skin_doubleSpinBox.setReadOnly(True)
+
+        self.gridLayout.addWidget(self.skin_doubleSpinBox, 3, 1, 1, 1)
+
+        self.width_doubleSpinBox = QDoubleSpinBox(self.params_group)
+        self.width_doubleSpinBox.setObjectName(u"width_doubleSpinBox")
+        self.width_doubleSpinBox.setReadOnly(True)
+
+        self.gridLayout.addWidget(self.width_doubleSpinBox, 0, 1, 1, 1)
+
         self.thickness_doubleSpinBox = QDoubleSpinBox(self.params_group)
         self.thickness_doubleSpinBox.setObjectName(u"thickness_doubleSpinBox")
+        self.thickness_doubleSpinBox.setReadOnly(True)
 
         self.gridLayout.addWidget(self.thickness_doubleSpinBox, 1, 1, 1, 1)
 
@@ -77,135 +102,343 @@ class Ui_MainWindow(object):
 
         self.gridLayout.addWidget(self.aL_label, 2, 0, 1, 1)
 
+        self.w_label = QLabel(self.params_group)
+        self.w_label.setObjectName(u"w_label")
+
+        self.gridLayout.addWidget(self.w_label, 0, 0, 1, 1)
+
         self.aL_doubleSpinBox = QDoubleSpinBox(self.params_group)
         self.aL_doubleSpinBox.setObjectName(u"aL_doubleSpinBox")
+        self.aL_doubleSpinBox.setReadOnly(True)
 
         self.gridLayout.addWidget(self.aL_doubleSpinBox, 2, 1, 1, 1)
 
-        self.skin_label = QLabel(self.params_group)
-        self.skin_label.setObjectName(u"skin_label")
 
-        self.gridLayout.addWidget(self.skin_label, 3, 0, 1, 1)
+        self.verticalLayout.addWidget(self.params_group)
 
-        self.skin_doubleSpinBox = QDoubleSpinBox(self.params_group)
-        self.skin_doubleSpinBox.setObjectName(u"skin_doubleSpinBox")
+        self.groupBox_3 = QGroupBox(self.centralwidget)
+        self.groupBox_3.setObjectName(u"groupBox_3")
+        self.verticalLayout_3 = QVBoxLayout(self.groupBox_3)
+        self.verticalLayout_3.setObjectName(u"verticalLayout_3")
+        self.label = QLabel(self.groupBox_3)
+        self.label.setObjectName(u"label")
 
-        self.gridLayout.addWidget(self.skin_doubleSpinBox, 3, 1, 1, 1)
+        self.verticalLayout_3.addWidget(self.label)
 
-        self.n_label = QLabel(self.params_group)
-        self.n_label.setObjectName(u"n_label")
+        self.horizontalLayout_3 = QHBoxLayout()
+        self.horizontalLayout_3.setObjectName(u"horizontalLayout_3")
+        self.well_combo_dim = QComboBox(self.groupBox_3)
+        self.well_combo_dim.setObjectName(u"well_combo_dim")
+        sizePolicy1 = QSizePolicy(QSizePolicy.Policy.Preferred, QSizePolicy.Policy.Preferred)
+        sizePolicy1.setHorizontalStretch(0)
+        sizePolicy1.setVerticalStretch(0)
+        sizePolicy1.setHeightForWidth(self.well_combo_dim.sizePolicy().hasHeightForWidth())
+        self.well_combo_dim.setSizePolicy(sizePolicy1)
+        self.well_combo_dim.setMinimumSize(QSize(160, 0))
 
-        self.gridLayout.addWidget(self.n_label, 4, 0, 1, 1)
-
-        self.n_spinBox = QSpinBox(self.params_group)
-        self.n_spinBox.setObjectName(u"n_spinBox")
-
-        self.gridLayout.addWidget(self.n_spinBox, 4, 1, 1, 1)
-
-
-        self.handle_menu.addWidget(self.params_group)
-
-        self.approx_model_group = QGroupBox(self.centralwidget)
-        self.approx_model_group.setObjectName(u"approx_model_group")
-        self.gridLayout1 = QGridLayout(self.approx_model_group)
-        self.gridLayout1.setObjectName(u"gridLayout1")
-        self.approx_train_model_btn = QPushButton(self.approx_model_group)
-        self.approx_train_model_btn.setObjectName(u"approx_train_model_btn")
-
-        self.gridLayout1.addWidget(self.approx_train_model_btn, 0, 0, 1, 1)
-
-        self.approx_save_model_btn = QPushButton(self.approx_model_group)
-        self.approx_save_model_btn.setObjectName(u"approx_save_model_btn")
-
-        self.gridLayout1.addWidget(self.approx_save_model_btn, 0, 1, 1, 1)
-
-        self.approx_load_model_btn = QPushButton(self.approx_model_group)
-        self.approx_load_model_btn.setObjectName(u"approx_load_model_btn")
-
-        self.gridLayout1.addWidget(self.approx_load_model_btn, 1, 0, 1, 1)
-
-        self.approx_model_status_label = QLabel(self.approx_model_group)
-        self.approx_model_status_label.setObjectName(u"approx_model_status_label")
-        self.approx_model_status_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
-
-        self.gridLayout1.addWidget(self.approx_model_status_label, 1, 1, 1, 1)
+        self.horizontalLayout_3.addWidget(self.well_combo_dim)
 
 
-        self.handle_menu.addWidget(self.approx_model_group)
+        self.verticalLayout_3.addLayout(self.horizontalLayout_3)
 
+
+        self.verticalLayout.addWidget(self.groupBox_3)
+
+        self.horizontalLayout_2 = QHBoxLayout()
+        self.horizontalLayout_2.setObjectName(u"horizontalLayout_2")
         self.interpolar_model_group = QGroupBox(self.centralwidget)
         self.interpolar_model_group.setObjectName(u"interpolar_model_group")
-        self.gridLayout2 = QGridLayout(self.interpolar_model_group)
-        self.gridLayout2.setObjectName(u"gridLayout2")
-        self.interpolar_train_model_btn = QPushButton(self.interpolar_model_group)
-        self.interpolar_train_model_btn.setObjectName(u"interpolar_train_model_btn")
-
-        self.gridLayout2.addWidget(self.interpolar_train_model_btn, 0, 0, 1, 1)
-
+        self.gridLayout1 = QGridLayout(self.interpolar_model_group)
+        self.gridLayout1.setObjectName(u"gridLayout1")
         self.interpolar_load_model_btn = QPushButton(self.interpolar_model_group)
         self.interpolar_load_model_btn.setObjectName(u"interpolar_load_model_btn")
 
-        self.gridLayout2.addWidget(self.interpolar_load_model_btn, 1, 0, 1, 1)
+        self.gridLayout1.addWidget(self.interpolar_load_model_btn, 1, 0, 1, 1)
+
+        self.interpolar_train_model_btn = QPushButton(self.interpolar_model_group)
+        self.interpolar_train_model_btn.setObjectName(u"interpolar_train_model_btn")
+
+        self.gridLayout1.addWidget(self.interpolar_train_model_btn, 0, 0, 1, 1)
+
+        self.interpolar_save_model_btn = QPushButton(self.interpolar_model_group)
+        self.interpolar_save_model_btn.setObjectName(u"interpolar_save_model_btn")
+
+        self.gridLayout1.addWidget(self.interpolar_save_model_btn, 0, 2, 1, 1)
 
         self.interpolar_model_status_label = QLabel(self.interpolar_model_group)
         self.interpolar_model_status_label.setObjectName(u"interpolar_model_status_label")
         self.interpolar_model_status_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
 
-        self.gridLayout2.addWidget(self.interpolar_model_status_label, 1, 1, 1, 1)
-
-        self.interpolar_save_model_btn = QPushButton(self.interpolar_model_group)
-        self.interpolar_save_model_btn.setObjectName(u"interpolar_save_model_btn")
-
-        self.gridLayout2.addWidget(self.interpolar_save_model_btn, 0, 1, 1, 1)
+        self.gridLayout1.addWidget(self.interpolar_model_status_label, 1, 2, 1, 1)
 
 
-        self.handle_menu.addWidget(self.interpolar_model_group)
+        self.horizontalLayout_2.addWidget(self.interpolar_model_group)
+
+
+        self.verticalLayout.addLayout(self.horizontalLayout_2)
+
+        self.approx_model_group = QGroupBox(self.centralwidget)
+        self.approx_model_group.setObjectName(u"approx_model_group")
+        self.gridLayout2 = QGridLayout(self.approx_model_group)
+        self.gridLayout2.setObjectName(u"gridLayout2")
+        self.approx_save_model_btn = QPushButton(self.approx_model_group)
+        self.approx_save_model_btn.setObjectName(u"approx_save_model_btn")
+
+        self.gridLayout2.addWidget(self.approx_save_model_btn, 0, 1, 1, 1)
+
+        self.approx_model_status_label = QLabel(self.approx_model_group)
+        self.approx_model_status_label.setObjectName(u"approx_model_status_label")
+        self.approx_model_status_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
+
+        self.gridLayout2.addWidget(self.approx_model_status_label, 1, 1, 1, 1)
+
+        self.approx_train_model_btn = QPushButton(self.approx_model_group)
+        self.approx_train_model_btn.setObjectName(u"approx_train_model_btn")
+
+        self.gridLayout2.addWidget(self.approx_train_model_btn, 0, 0, 1, 1)
+
+        self.approx_load_model_btn = QPushButton(self.approx_model_group)
+        self.approx_load_model_btn.setObjectName(u"approx_load_model_btn")
+
+        self.gridLayout2.addWidget(self.approx_load_model_btn, 1, 0, 1, 1)
+
+
+        self.verticalLayout.addWidget(self.approx_model_group)
 
         self.report_group = QGroupBox(self.centralwidget)
         self.report_group.setObjectName(u"report_group")
-        sizePolicy = QSizePolicy(QSizePolicy.Policy.Minimum, QSizePolicy.Policy.Expanding)
-        sizePolicy.setHorizontalStretch(0)
-        sizePolicy.setVerticalStretch(0)
-        sizePolicy.setHeightForWidth(self.report_group.sizePolicy().hasHeightForWidth())
-        self.report_group.setSizePolicy(sizePolicy)
-        self.report_group.setMinimumSize(QSize(0, 149))
-        self.vboxLayout = QVBoxLayout(self.report_group)
-        self.vboxLayout.setObjectName(u"vboxLayout")
+        sizePolicy2 = QSizePolicy(QSizePolicy.Policy.Fixed, QSizePolicy.Policy.Expanding)
+        sizePolicy2.setHorizontalStretch(0)
+        sizePolicy2.setVerticalStretch(0)
+        sizePolicy2.setHeightForWidth(self.report_group.sizePolicy().hasHeightForWidth())
+        self.report_group.setSizePolicy(sizePolicy2)
+        self.verticalLayout_2 = QVBoxLayout(self.report_group)
+        self.verticalLayout_2.setObjectName(u"verticalLayout_2")
         self.text_report = QTextEdit(self.report_group)
         self.text_report.setObjectName(u"text_report")
-        sizePolicy1 = QSizePolicy(QSizePolicy.Policy.Preferred, QSizePolicy.Policy.Preferred)
-        sizePolicy1.setHorizontalStretch(0)
-        sizePolicy1.setVerticalStretch(0)
-        sizePolicy1.setHeightForWidth(self.text_report.sizePolicy().hasHeightForWidth())
-        self.text_report.setSizePolicy(sizePolicy1)
-        self.text_report.setMinimumSize(QSize(0, 176))
+        sizePolicy3 = QSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Expanding)
+        sizePolicy3.setHorizontalStretch(0)
+        sizePolicy3.setVerticalStretch(0)
+        sizePolicy3.setHeightForWidth(self.text_report.sizePolicy().hasHeightForWidth())
+        self.text_report.setSizePolicy(sizePolicy3)
         self.text_report.setReadOnly(True)
 
-        self.vboxLayout.addWidget(self.text_report)
+        self.verticalLayout_2.addWidget(self.text_report)
 
 
-        self.handle_menu.addWidget(self.report_group)
+        self.verticalLayout.addWidget(self.report_group)
 
 
-        self.horizontalLayout_2.addLayout(self.handle_menu)
+        self.horizontalLayout_4.addLayout(self.verticalLayout)
 
         self.tab_widget = QTabWidget(self.centralwidget)
         self.tab_widget.setObjectName(u"tab_widget")
-        sizePolicy1.setHeightForWidth(self.tab_widget.sizePolicy().hasHeightForWidth())
-        self.tab_widget.setSizePolicy(sizePolicy1)
+        sizePolicy3.setHeightForWidth(self.tab_widget.sizePolicy().hasHeightForWidth())
+        self.tab_widget.setSizePolicy(sizePolicy3)
         self.timeseries_tab = QWidget()
         self.timeseries_tab.setObjectName(u"timeseries_tab")
-        self.hboxLayout = QHBoxLayout(self.timeseries_tab)
-        self.hboxLayout.setObjectName(u"hboxLayout")
-        self.timeseries_controls_placeholder = QWidget(self.timeseries_tab)
-        self.timeseries_controls_placeholder.setObjectName(u"timeseries_controls_placeholder")
+        self.vboxLayout = QVBoxLayout(self.timeseries_tab)
+        self.vboxLayout.setObjectName(u"vboxLayout")
+        self.control_gbox = QGroupBox(self.timeseries_tab)
+        self.control_gbox.setObjectName(u"control_gbox")
+        sizePolicy4 = QSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Maximum)
+        sizePolicy4.setHorizontalStretch(0)
+        sizePolicy4.setVerticalStretch(0)
+        sizePolicy4.setHeightForWidth(self.control_gbox.sizePolicy().hasHeightForWidth())
+        self.control_gbox.setSizePolicy(sizePolicy4)
+        self.control_gbox.setMinimumSize(QSize(0, 234))
+        self.horizontalLayout_7 = QHBoxLayout(self.control_gbox)
+        self.horizontalLayout_7.setObjectName(u"horizontalLayout_7")
+        self.verticalLayout_4 = QVBoxLayout()
+        self.verticalLayout_4.setObjectName(u"verticalLayout_4")
+        self.verticalLayout_4.setSizeConstraint(QLayout.SizeConstraint.SetMinimumSize)
+        self.interp_btn = QPushButton(self.control_gbox)
+        self.interp_btn.setObjectName(u"interp_btn")
+        sizePolicy5 = QSizePolicy(QSizePolicy.Policy.Preferred, QSizePolicy.Policy.Maximum)
+        sizePolicy5.setHorizontalStretch(0)
+        sizePolicy5.setVerticalStretch(0)
+        sizePolicy5.setHeightForWidth(self.interp_btn.sizePolicy().hasHeightForWidth())
+        self.interp_btn.setSizePolicy(sizePolicy5)
 
-        self.hboxLayout.addWidget(self.timeseries_controls_placeholder)
+        self.verticalLayout_4.addWidget(self.interp_btn)
 
-        self.dimensionless_plot_placeholder = QWidget(self.timeseries_tab)
-        self.dimensionless_plot_placeholder.setObjectName(u"dimensionless_plot_placeholder")
+        self.extrapolate_btn = QPushButton(self.control_gbox)
+        self.extrapolate_btn.setObjectName(u"extrapolate_btn")
+        sizePolicy5.setHeightForWidth(self.extrapolate_btn.sizePolicy().hasHeightForWidth())
+        self.extrapolate_btn.setSizePolicy(sizePolicy5)
 
-        self.hboxLayout.addWidget(self.dimensionless_plot_placeholder)
+        self.verticalLayout_4.addWidget(self.extrapolate_btn)
+
+        self.ml_filter_btn = QPushButton(self.control_gbox)
+        self.ml_filter_btn.setObjectName(u"ml_filter_btn")
+        sizePolicy5.setHeightForWidth(self.ml_filter_btn.sizePolicy().hasHeightForWidth())
+        self.ml_filter_btn.setSizePolicy(sizePolicy5)
+
+        self.verticalLayout_4.addWidget(self.ml_filter_btn)
+
+        self.outlier_btn = QPushButton(self.control_gbox)
+        self.outlier_btn.setObjectName(u"outlier_btn")
+        sizePolicy5.setHeightForWidth(self.outlier_btn.sizePolicy().hasHeightForWidth())
+        self.outlier_btn.setSizePolicy(sizePolicy5)
+
+        self.verticalLayout_4.addWidget(self.outlier_btn)
+
+        self.fit_xy_btn = QPushButton(self.control_gbox)
+        self.fit_xy_btn.setObjectName(u"fit_xy_btn")
+        sizePolicy5.setHeightForWidth(self.fit_xy_btn.sizePolicy().hasHeightForWidth())
+        self.fit_xy_btn.setSizePolicy(sizePolicy5)
+
+        self.verticalLayout_4.addWidget(self.fit_xy_btn)
+
+        self.export_btn = QPushButton(self.control_gbox)
+        self.export_btn.setObjectName(u"export_btn")
+        sizePolicy5.setHeightForWidth(self.export_btn.sizePolicy().hasHeightForWidth())
+        self.export_btn.setSizePolicy(sizePolicy5)
+
+        self.verticalLayout_4.addWidget(self.export_btn)
+
+        self.reset_plots_btn = QPushButton(self.control_gbox)
+        self.reset_plots_btn.setObjectName(u"reset_plots_btn")
+        sizePolicy5.setHeightForWidth(self.reset_plots_btn.sizePolicy().hasHeightForWidth())
+        self.reset_plots_btn.setSizePolicy(sizePolicy5)
+
+        self.verticalLayout_4.addWidget(self.reset_plots_btn)
+
+
+        self.horizontalLayout_7.addLayout(self.verticalLayout_4)
+
+        self.groupBox_2 = QGroupBox(self.control_gbox)
+        self.groupBox_2.setObjectName(u"groupBox_2")
+        sizePolicy3.setHeightForWidth(self.groupBox_2.sizePolicy().hasHeightForWidth())
+        self.groupBox_2.setSizePolicy(sizePolicy3)
+        self.groupBox_2.setMinimumSize(QSize(0, 150))
+        self.horizontalLayout_5 = QHBoxLayout(self.groupBox_2)
+        self.horizontalLayout_5.setObjectName(u"horizontalLayout_5")
+        self.p_graphic = QWidget(self.groupBox_2)
+        self.p_graphic.setObjectName(u"p_graphic")
+        sizePolicy3.setHeightForWidth(self.p_graphic.sizePolicy().hasHeightForWidth())
+        self.p_graphic.setSizePolicy(sizePolicy3)
+
+        self.horizontalLayout_5.addWidget(self.p_graphic)
+
+        self.q_graphic = QWidget(self.groupBox_2)
+        self.q_graphic.setObjectName(u"q_graphic")
+        sizePolicy3.setHeightForWidth(self.q_graphic.sizePolicy().hasHeightForWidth())
+        self.q_graphic.setSizePolicy(sizePolicy3)
+
+        self.horizontalLayout_5.addWidget(self.q_graphic)
+
+
+        self.horizontalLayout_7.addWidget(self.groupBox_2)
+
+
+        self.vboxLayout.addWidget(self.control_gbox)
+
+        self.dimensionless_gbox = QGroupBox(self.timeseries_tab)
+        self.dimensionless_gbox.setObjectName(u"dimensionless_gbox")
+        self.horizontalLayout_6 = QHBoxLayout(self.dimensionless_gbox)
+        self.horizontalLayout_6.setObjectName(u"horizontalLayout_6")
+        self.verticalLayout_7 = QVBoxLayout()
+        self.verticalLayout_7.setObjectName(u"verticalLayout_7")
+        self.groupBox = QGroupBox(self.dimensionless_gbox)
+        self.groupBox.setObjectName(u"groupBox")
+        sizePolicy6 = QSizePolicy(QSizePolicy.Policy.Maximum, QSizePolicy.Policy.Preferred)
+        sizePolicy6.setHorizontalStretch(0)
+        sizePolicy6.setVerticalStretch(0)
+        sizePolicy6.setHeightForWidth(self.groupBox.sizePolicy().hasHeightForWidth())
+        self.groupBox.setSizePolicy(sizePolicy6)
+        self.groupBox.setFlat(False)
+        self.verticalLayout_5 = QVBoxLayout(self.groupBox)
+        self.verticalLayout_5.setObjectName(u"verticalLayout_5")
+        self.cb_real_p = QCheckBox(self.groupBox)
+        self.cb_real_p.setObjectName(u"cb_real_p")
+
+        self.verticalLayout_5.addWidget(self.cb_real_p)
+
+        self.cb_real_q = QCheckBox(self.groupBox)
+        self.cb_real_q.setObjectName(u"cb_real_q")
+
+        self.verticalLayout_5.addWidget(self.cb_real_q)
+
+        self.cb_dim_pD = QCheckBox(self.groupBox)
+        self.cb_dim_pD.setObjectName(u"cb_dim_pD")
+
+        self.verticalLayout_5.addWidget(self.cb_dim_pD)
+
+        self.cb_dim_dpD = QCheckBox(self.groupBox)
+        self.cb_dim_dpD.setObjectName(u"cb_dim_dpD")
+
+        self.verticalLayout_5.addWidget(self.cb_dim_dpD)
+
+        self.cb_dim_tD = QCheckBox(self.groupBox)
+        self.cb_dim_tD.setObjectName(u"cb_dim_tD")
+
+        self.verticalLayout_5.addWidget(self.cb_dim_tD)
+
+        self.cb_dim_CD = QCheckBox(self.groupBox)
+        self.cb_dim_CD.setObjectName(u"cb_dim_CD")
+
+        self.verticalLayout_5.addWidget(self.cb_dim_CD)
+
+        self.cb_XY_plot = QCheckBox(self.groupBox)
+        self.cb_XY_plot.setObjectName(u"cb_XY_plot")
+
+        self.verticalLayout_5.addWidget(self.cb_XY_plot)
+
+        self.cb_calc_XY = QCheckBox(self.groupBox)
+        self.cb_calc_XY.setObjectName(u"cb_calc_XY")
+
+        self.verticalLayout_5.addWidget(self.cb_calc_XY)
+
+
+        self.verticalLayout_7.addWidget(self.groupBox)
+
+        self.groupBox_4 = QGroupBox(self.dimensionless_gbox)
+        self.groupBox_4.setObjectName(u"groupBox_4")
+        sizePolicy6.setHeightForWidth(self.groupBox_4.sizePolicy().hasHeightForWidth())
+        self.groupBox_4.setSizePolicy(sizePolicy6)
+        self.verticalLayout_6 = QVBoxLayout(self.groupBox_4)
+        self.verticalLayout_6.setObjectName(u"verticalLayout_6")
+        self.cb_gfunc = QCheckBox(self.groupBox_4)
+        self.cb_gfunc.setObjectName(u"cb_gfunc")
+
+        self.verticalLayout_6.addWidget(self.cb_gfunc)
+
+        self.cb_mbt = QCheckBox(self.groupBox_4)
+        self.cb_mbt.setObjectName(u"cb_mbt")
+
+        self.verticalLayout_6.addWidget(self.cb_mbt)
+
+        self.cb_type_gry = QCheckBox(self.groupBox_4)
+        self.cb_type_gry.setObjectName(u"cb_type_gry")
+
+        self.verticalLayout_6.addWidget(self.cb_type_gry)
+
+        self.cb_type_cinco = QCheckBox(self.groupBox_4)
+        self.cb_type_cinco.setObjectName(u"cb_type_cinco")
+
+        self.verticalLayout_6.addWidget(self.cb_type_cinco)
+
+        self.cb_type_valko = QCheckBox(self.groupBox_4)
+        self.cb_type_valko.setObjectName(u"cb_type_valko")
+
+        self.verticalLayout_6.addWidget(self.cb_type_valko)
+
+
+        self.verticalLayout_7.addWidget(self.groupBox_4)
+
+
+        self.horizontalLayout_6.addLayout(self.verticalLayout_7)
+
+        self.dim_plot = QWidget(self.dimensionless_gbox)
+        self.dim_plot.setObjectName(u"dim_plot")
+        sizePolicy3.setHeightForWidth(self.dim_plot.sizePolicy().hasHeightForWidth())
+        self.dim_plot.setSizePolicy(sizePolicy3)
+
+        self.horizontalLayout_6.addWidget(self.dim_plot)
+
+
+        self.vboxLayout.addWidget(self.dimensionless_gbox)
 
         self.tab_widget.addTab(self.timeseries_tab, "")
         self.grp_tab = QWidget()
@@ -229,11 +462,11 @@ class Ui_MainWindow(object):
         self.vboxLayout3.setObjectName(u"vboxLayout3")
         self.results_text = QTextEdit(self.results_tab)
         self.results_text.setObjectName(u"results_text")
-        sizePolicy2 = QSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Preferred)
-        sizePolicy2.setHorizontalStretch(0)
-        sizePolicy2.setVerticalStretch(0)
-        sizePolicy2.setHeightForWidth(self.results_text.sizePolicy().hasHeightForWidth())
-        self.results_text.setSizePolicy(sizePolicy2)
+        sizePolicy7 = QSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Preferred)
+        sizePolicy7.setHorizontalStretch(0)
+        sizePolicy7.setVerticalStretch(0)
+        sizePolicy7.setHeightForWidth(self.results_text.sizePolicy().hasHeightForWidth())
+        self.results_text.setSizePolicy(sizePolicy7)
 
         self.vboxLayout3.addWidget(self.results_text)
 
@@ -244,10 +477,7 @@ class Ui_MainWindow(object):
 
         self.tab_widget.addTab(self.results_tab, "")
 
-        self.horizontalLayout_2.addWidget(self.tab_widget)
-
-
-        self.horizontalLayout_3.addLayout(self.horizontalLayout_2)
+        self.horizontalLayout_4.addWidget(self.tab_widget)
 
         MainWindow.setCentralWidget(self.centralwidget)
         self.statusbar = QStatusBar(MainWindow)
@@ -256,7 +486,7 @@ class Ui_MainWindow(object):
 
         self.retranslateUi(MainWindow)
 
-        self.tab_widget.setCurrentIndex(3)
+        self.tab_widget.setCurrentIndex(0)
 
 
         QMetaObject.connectSlotsByName(MainWindow)
@@ -264,26 +494,53 @@ class Ui_MainWindow(object):
 
     def retranslateUi(self, MainWindow):
         MainWindow.setWindowTitle(QCoreApplication.translate("MainWindow", u"MainWindow", None))
-        self.load_template_button.setText(QCoreApplication.translate("MainWindow", u"\u0417\u0430\u0433\u0440\u0443\u0437\u0438\u0442\u044c csv/pq \u0448\u0430\u0431\u043b\u043e\u043d", None))
-        self.label.setText(QCoreApplication.translate("MainWindow", u"TextLabel", None))
+        self.load_template_button.setText(QCoreApplication.translate("MainWindow", u"\u0417\u0430\u0433\u0440\u0443\u0437\u0438\u0442\u044c csv/pq \u0444\u0430\u0439\u043b", None))
+        self.load_file_label.setText(QCoreApplication.translate("MainWindow", u"\u0417\u0430\u0433\u0440\u0443\u0437\u0438\u0442\u0435 \u0444\u0430\u0439\u043b", None))
         self.params_group.setTitle(QCoreApplication.translate("MainWindow", u"\u041f\u0430\u0440\u0430\u043c\u0435\u0442\u0440\u044b", None))
-        self.w_label.setText(QCoreApplication.translate("MainWindow", u"\u0414\u043b\u0438\u043d\u0430 \u0442\u0440\u0435\u0449\u0438\u043d\u044b W, \u043c", None))
         self.thickness_label.setText(QCoreApplication.translate("MainWindow", u"\u0422\u043e\u043b\u0449\u0438\u043d\u0430 \u043f\u043b\u0430\u0441\u0442\u0430 h, \u043c", None))
-        self.aL_label.setText(QCoreApplication.translate("MainWindow", u"a/L", None))
         self.skin_label.setText(QCoreApplication.translate("MainWindow", u"Skin", None))
         self.n_label.setText(QCoreApplication.translate("MainWindow", u"N (\u0442\u0440\u0435\u0449\u0438\u043d\u044b)", None))
-        self.approx_model_group.setTitle(QCoreApplication.translate("MainWindow", u"\u041c\u043e\u0434\u0435\u043b\u044c \u0430\u043f\u043f\u0440\u043e\u043a\u0441\u0438\u043c\u0430\u0446\u0438\u0438", None))
-        self.approx_train_model_btn.setText(QCoreApplication.translate("MainWindow", u"\u041e\u0431\u0443\u0447\u0438\u0442\u044c \u043c\u043e\u0434\u0435\u043b\u044c", None))
-        self.approx_save_model_btn.setText(QCoreApplication.translate("MainWindow", u"\u0421\u043e\u0445\u0440\u0430\u043d\u0438\u0442\u044c \u043c\u043e\u0434\u0435\u043b\u044c", None))
-        self.approx_load_model_btn.setText(QCoreApplication.translate("MainWindow", u"\u0417\u0430\u0433\u0440\u0443\u0437\u0438\u0442\u044c \u043c\u043e\u0434\u0435\u043b\u044c", None))
-        self.approx_model_status_label.setText(QCoreApplication.translate("MainWindow", u"\u041c\u043e\u0434\u0435\u043b\u044c \u043d\u0435 \u043e\u0431\u0443\u0447\u0435\u043d\u0430", None))
+        self.aL_label.setText(QCoreApplication.translate("MainWindow", u"a/L", None))
+        self.w_label.setText(QCoreApplication.translate("MainWindow", u"\u0414\u043b\u0438\u043d\u0430 \u0442\u0440\u0435\u0449\u0438\u043d\u044b W, \u043c", None))
+        self.groupBox_3.setTitle(QCoreApplication.translate("MainWindow", u"\u0412\u044b\u0431\u043e\u0440 \u0441\u043a\u0432\u0430\u0436\u0438\u043d\u044b", None))
+        self.label.setText(QCoreApplication.translate("MainWindow", u"\u0421\u043a\u0432\u0430\u0436\u0438\u043d\u0430 \u043d\u0435 \u0432\u044b\u0431\u0440\u0430\u043d\u0430", None))
         self.interpolar_model_group.setTitle(QCoreApplication.translate("MainWindow", u"\u041c\u043e\u0434\u0435\u043b\u044c \u0438\u043d\u0442\u0435\u0440\u043f\u043e\u043b\u044f\u0446\u0438\u0438", None))
-        self.interpolar_train_model_btn.setText(QCoreApplication.translate("MainWindow", u"\u041e\u0431\u0443\u0447\u0438\u0442\u044c \u043c\u043e\u0434\u0435\u043b\u044c", None))
         self.interpolar_load_model_btn.setText(QCoreApplication.translate("MainWindow", u"\u0417\u0430\u0433\u0440\u0443\u0437\u0438\u0442\u044c \u043c\u043e\u0434\u0435\u043b\u044c", None))
-        self.interpolar_model_status_label.setText(QCoreApplication.translate("MainWindow", u"\u041c\u043e\u0434\u0435\u043b\u044c \u043d\u0435 \u043e\u0431\u0443\u0447\u0435\u043d\u0430", None))
+        self.interpolar_train_model_btn.setText(QCoreApplication.translate("MainWindow", u"\u041e\u0431\u0443\u0447\u0438\u0442\u044c \u043c\u043e\u0434\u0435\u043b\u044c", None))
         self.interpolar_save_model_btn.setText(QCoreApplication.translate("MainWindow", u"\u0421\u043e\u0445\u0440\u0430\u043d\u0438\u0442\u044c \u043c\u043e\u0434\u0435\u043b\u044c", None))
+        self.interpolar_model_status_label.setText(QCoreApplication.translate("MainWindow", u"\u041c\u043e\u0434\u0435\u043b\u044c \u043d\u0435 \u043e\u0431\u0443\u0447\u0435\u043d\u0430", None))
+        self.approx_model_group.setTitle(QCoreApplication.translate("MainWindow", u"\u041c\u043e\u0434\u0435\u043b\u044c \u0430\u043f\u043f\u0440\u043e\u043a\u0441\u0438\u043c\u0430\u0446\u0438\u0438", None))
+        self.approx_save_model_btn.setText(QCoreApplication.translate("MainWindow", u"\u0421\u043e\u0445\u0440\u0430\u043d\u0438\u0442\u044c \u043c\u043e\u0434\u0435\u043b\u044c", None))
+        self.approx_model_status_label.setText(QCoreApplication.translate("MainWindow", u"\u041c\u043e\u0434\u0435\u043b\u044c \u043d\u0435 \u043e\u0431\u0443\u0447\u0435\u043d\u0430", None))
+        self.approx_train_model_btn.setText(QCoreApplication.translate("MainWindow", u"\u041e\u0431\u0443\u0447\u0438\u0442\u044c \u043c\u043e\u0434\u0435\u043b\u044c", None))
+        self.approx_load_model_btn.setText(QCoreApplication.translate("MainWindow", u"\u0417\u0430\u0433\u0440\u0443\u0437\u0438\u0442\u044c \u043c\u043e\u0434\u0435\u043b\u044c", None))
         self.report_group.setTitle(QCoreApplication.translate("MainWindow", u"\u041e\u0442\u0447\u0451\u0442", None))
-        self.tab_widget.setTabText(self.tab_widget.indexOf(self.timeseries_tab), QCoreApplication.translate("MainWindow", u"\u0411\u0435\u0437\u0440\u0430\u0437\u043c\u0435\u0440\u043d\u044b\u0435 \u043a\u0440\u0438\u0432\u044b\u0435", None))
+        self.control_gbox.setTitle(QCoreApplication.translate("MainWindow", u"\u0423\u043f\u0440\u0430\u0432\u043b\u0435\u043d\u0438\u0435", None))
+        self.interp_btn.setText(QCoreApplication.translate("MainWindow", u"\u0418\u043d\u0442\u0435\u0440\u043f\u043e\u043b\u0438\u0440\u043e\u0432\u0430\u0442\u044c \u043f\u0440\u043e\u043f\u0443\u0441\u043a\u0438", None))
+        self.extrapolate_btn.setText(QCoreApplication.translate("MainWindow", u"\u042d\u043a\u0441\u0442\u0440\u0430\u043f\u043e\u043b\u0438\u0440\u043e\u0432\u0430\u0442\u044c  X-Y", None))
+        self.ml_filter_btn.setText(QCoreApplication.translate("MainWindow", u"ML \u0444\u0438\u043b\u044c\u0442\u0440\u0430\u0446\u0438\u044f", None))
+        self.outlier_btn.setText(QCoreApplication.translate("MainWindow", u"\u041e\u0431\u043d\u0430\u0440\u0443\u0436\u0438\u0442\u044c \u0432\u044b\u0431\u0440\u043e\u0441\u044b", None))
+        self.fit_xy_btn.setText(QCoreApplication.translate("MainWindow", u"\u0410\u043f\u043f\u0440\u043e\u043a\u0441\u0438\u043c\u0438\u0440\u043e\u0432\u0430\u0442\u044c X-Y", None))
+        self.export_btn.setText(QCoreApplication.translate("MainWindow", u"\u042d\u043a\u0441\u043f\u043e\u0440\u0442\u0438\u0440\u043e\u0432\u0430\u0442\u044c \u0434\u0430\u043d\u043d\u044b\u0435", None))
+        self.reset_plots_btn.setText(QCoreApplication.translate("MainWindow", u"\u0421\u0431\u0440\u043e\u0441\u0438\u0442\u044c \u0433\u0440\u0430\u0444\u0438\u043a\u0438", None))
+        self.groupBox_2.setTitle(QCoreApplication.translate("MainWindow", u"\u0420\u0435\u0430\u043b\u044c\u043d\u044b\u0435 \u0434\u0430\u043d\u043d\u044b\u0435", None))
+        self.dimensionless_gbox.setTitle(QCoreApplication.translate("MainWindow", u"\u0420\u0430\u0441\u0447\u0435\u0442\u043d\u044b\u0435 \u0434\u0430\u043d\u043d\u044b\u0435", None))
+        self.groupBox.setTitle(QCoreApplication.translate("MainWindow", u"\u0411\u0435\u0437\u0440\u0430\u0437\u043c\u0435\u0440\u043d\u044b\u0435 \u0433\u0440\u0430\u0444\u0438\u043a\u0438 (log-log)", None))
+        self.cb_real_p.setText(QCoreApplication.translate("MainWindow", u"P_real", None))
+        self.cb_real_q.setText(QCoreApplication.translate("MainWindow", u"Q_real", None))
+        self.cb_dim_pD.setText(QCoreApplication.translate("MainWindow", u"pD(Y)", None))
+        self.cb_dim_dpD.setText(QCoreApplication.translate("MainWindow", u"dp(D)/dlog(Y)", None))
+        self.cb_dim_tD.setText(QCoreApplication.translate("MainWindow", u"tD(~Y)", None))
+        self.cb_dim_CD.setText(QCoreApplication.translate("MainWindow", u"CD(\u0415\u043c\u043a\u043e\u0441\u0442\u044c)", None))
+        self.cb_XY_plot.setText(QCoreApplication.translate("MainWindow", u"\u0418\u0441\u0445\u043e\u0434\u043d\u044b\u0435 X-Y", None))
+        self.cb_calc_XY.setText(QCoreApplication.translate("MainWindow", u"\u0420\u0430\u0441\u0447\u0435\u0442\u043d\u044b\u0435 X-Y", None))
+        self.groupBox_4.setTitle(QCoreApplication.translate("MainWindow", u"\u0422\u0438\u043f\u043e\u0432\u044b\u0435 \u043a\u0440\u0438\u0432\u044b\u0435", None))
+        self.cb_gfunc.setText(QCoreApplication.translate("MainWindow", u"G-\u0444\u0443\u043d\u043a\u0446\u0438\u044f(Nolte)", None))
+        self.cb_mbt.setText(QCoreApplication.translate("MainWindow", u"\u0412\u0440\u0435\u043c\u044f \u043c\u0430\u0442\u0435\u0440\u0438\u0430\u043b\u044c\u043d\u043e\u0433\u043e \u0431\u0430\u043b\u0430\u043d\u0441\u0430", None))
+        self.cb_type_gry.setText(QCoreApplication.translate("MainWindow", u"\u041b\u0438\u043d\u0435\u0439\u043d\u044b\u0439 \u0440\u0435\u0436\u0438\u043c", None))
+        self.cb_type_cinco.setText(QCoreApplication.translate("MainWindow", u"\u0411\u0438\u043b\u0438\u043d\u0435\u0439\u043d\u044b\u0439 \u0440\u0435\u0436\u0438\u043c", None))
+        self.cb_type_valko.setText(QCoreApplication.translate("MainWindow", u"\u041f\u0441\u0435\u0432\u0434\u043e\u0440\u0430\u0434\u0438\u0430\u043b\u044c\u043d\u044b\u0439 \u0440\u0435\u0436\u0438\u043c", None))
+        self.tab_widget.setTabText(self.tab_widget.indexOf(self.timeseries_tab), QCoreApplication.translate("MainWindow", u"\u041e\u043f\u0435\u0440\u0430\u0446\u0438\u0438 \u0438 \u0433\u0440\u0430\u0444\u0438\u043a\u0438", None))
         self.tab_widget.setTabText(self.tab_widget.indexOf(self.grp_tab), QCoreApplication.translate("MainWindow", u"\u0410\u043d\u0430\u043b\u0438\u0437 \u0413\u0420\u041f", None))
         self.tab_widget.setTabText(self.tab_widget.indexOf(self.type_curves_tab), QCoreApplication.translate("MainWindow", u"\u042d\u0442\u0430\u043b\u043e\u043d\u043d\u044b\u0435 \u043a\u0440\u0438\u0432\u044b\u0435", None))
         self.export_report_btn.setText(QCoreApplication.translate("MainWindow", u"\u042d\u043a\u0441\u043f\u043e\u0440\u0442 \u043e\u0442\u0447\u0435\u0442\u0430", None))
