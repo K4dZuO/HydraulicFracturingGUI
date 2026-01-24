@@ -17,7 +17,7 @@
    <string>MainWindow</string>
   </property>
   <widget class="QWidget" name="centralwidget">
-   <layout class="QHBoxLayout" name="horizontalLayout_4">
+   <layout class="QHBoxLayout" name="horizontalLayout_8">
     <item>
      <layout class="QVBoxLayout" name="verticalLayout">
       <item>
@@ -285,7 +285,7 @@
        </sizepolicy>
       </property>
       <property name="currentIndex">
-       <number>0</number>
+       <number>3</number>
       </property>
       <widget class="QWidget" name="timeseries_tab">
        <attribute name="title">
@@ -463,7 +463,7 @@
              <item>
               <widget class="QGroupBox" name="groupBox">
                <property name="sizePolicy">
-                <sizepolicy hsizetype="Maximum" vsizetype="Preferred">
+                <sizepolicy hsizetype="Minimum" vsizetype="Preferred">
                  <horstretch>0</horstretch>
                  <verstretch>0</verstretch>
                 </sizepolicy>
@@ -601,6 +601,29 @@
         </item>
        </layout>
       </widget>
+      <widget class="QWidget" name="data_tab">
+       <attribute name="title">
+        <string>Табличное представление</string>
+       </attribute>
+       <layout class="QVBoxLayout" name="verticalLayout_8">
+        <item>
+         <widget class="QTableView" name="data_table"/>
+        </item>
+        <item>
+         <widget class="QLabel" name="data_info_label">
+          <property name="sizePolicy">
+           <sizepolicy hsizetype="Preferred" vsizetype="Maximum">
+            <horstretch>0</horstretch>
+            <verstretch>0</verstretch>
+           </sizepolicy>
+          </property>
+          <property name="text">
+           <string>Данные скважины еще не загружены</string>
+          </property>
+         </widget>
+        </item>
+       </layout>
+      </widget>
       <widget class="QWidget" name="grp_tab">
        <attribute name="title">
         <string>Анализ ГРП</string>
@@ -611,9 +634,48 @@
        <attribute name="title">
         <string>Эталонные кривые</string>
        </attribute>
-       <layout class="QVBoxLayout">
+       <layout class="QVBoxLayout" name="verticalLayout_9">
         <item>
-         <widget class="QWidget" name="type_curves_plot_placeholder" native="true"/>
+         <layout class="QHBoxLayout" name="horizontalLayout_4">
+          <item>
+           <widget class="QPushButton" name="linear_btn">
+            <property name="text">
+             <string>Линейное течение</string>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <widget class="QPushButton" name="bilinear_btn">
+            <property name="text">
+             <string>Билинейное течение</string>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <widget class="QPushButton" name="pseudoradial_btn">
+            <property name="text">
+             <string>Псевдорадиальное течение</string>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <widget class="QPushButton" name="match_curves_btn">
+            <property name="text">
+             <string>Сопоставить с данными</string>
+            </property>
+           </widget>
+          </item>
+         </layout>
+        </item>
+        <item>
+         <widget class="QWidget" name="type_curves_plot_placeholder" native="true">
+          <property name="sizePolicy">
+           <sizepolicy hsizetype="Expanding" vsizetype="Expanding">
+            <horstretch>0</horstretch>
+            <verstretch>0</verstretch>
+           </sizepolicy>
+          </property>
+         </widget>
         </item>
        </layout>
       </widget>

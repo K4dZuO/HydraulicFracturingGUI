@@ -1753,17 +1753,16 @@ class MyApp(QMainWindow, Ui_MainWindow):
         # self.productivity_btn.clicked.connect(self.on_compute_productivity_index)
         # self.transitions_btn.clicked.connect(self.on_detect_flow_regime_transitions)
         
-        # # Эталонные кривые
-        # self.bilinear_btn.clicked.connect(self.on_plot_bilinear)
-        # self.linear_btn.clicked.connect(self.on_plot_linear)
-        # self.pseudoradial_btn.clicked.connect(self.on_plot_pseudoradial)
-        # self.match_curves_btn.clicked.connect(self.on_match_type_curves)
+        # Эталонные кривые
+        self.bilinear_btn.clicked.connect(self.on_plot_bilinear)
+        self.linear_btn.clicked.connect(self.on_plot_linear)
+        self.pseudoradial_btn.clicked.connect(self.on_plot_pseudoradial)
+        self.match_curves_btn.clicked.connect(self.on_match_type_curves)
         
         # Результаты
         self.export_report_btn.clicked.connect(self.on_export_report)
 
-        # self.data_tab = setup_data_tab(self)
-        # self.tab_widget.addTab(self.data_tab, "Загруженные данные")
+        self.tab_widget.addTab(self.data_tab, "Загруженные данные")
 
     def _load_data_file(self, target: str = 'main') -> None:
         """
@@ -1807,8 +1806,8 @@ class MyApp(QMainWindow, Ui_MainWindow):
             # Обновляем список выбора скважин
             self.update_well_selection()
             
-            # Обновляем отображение параметров ГРП
-            self.update_grp_parameters()
+            # # Обновляем отображение параметров ГРП
+            # self.update_grp_parameters()
             
             # Обновляем вкладку с загруженными данными
             self.update_data_tab()
@@ -2081,12 +2080,12 @@ class MyApp(QMainWindow, Ui_MainWindow):
     def reset_plots(self) -> None:
         """Сброс всех графиков и чекбоксов"""
         # Очищаем график
-        if hasattr(self, 'dim_plot'):
-            self.dim_plot.clear()
-            self.dim_plot.setLabel('bottom', 'X (безразмерный фильтрационный параметр)')
-            self.dim_plot.setLabel('left', 'Безразмерный параметр')
-            self.dim_plot.setTitle("Безразмерные кривые МГРП")
-            self.dim_plot.showGrid(x=True, y=True)
+        # if hasattr(self, 'dim_plot'):
+        self.dim_plot.clear()
+        self.dim_plot.setLabel('bottom', 'X (безразмерный фильтрационный параметр)')
+        self.dim_plot.setLabel('left', 'Безразмерный параметр')
+        self.dim_plot.setTitle("Безразмерные кривые МГРП")
+        self.dim_plot.showGrid(x=True, y=True)
         
         # Снимаем все чекбоксы
         if hasattr(self, 'cb_dim_pD'):

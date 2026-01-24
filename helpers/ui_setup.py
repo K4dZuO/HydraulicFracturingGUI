@@ -30,7 +30,6 @@ def setup_interface(app: 'MyApp') -> None:
 
     setup_timeseries_tab(app)
     setup_type_curves_tab(app)
-    setup_data_tab(app)
 
 
 # ------------------------------------------------------------------
@@ -87,8 +86,8 @@ def setup_type_curves_tab(app: 'MyApp') -> None:
     app.type_curves_widget = pg.PlotWidget()
     app.type_curves_widget.setLogMode(True, True)
     app.type_curves_widget.showGrid(x=True, y=True)
-    # app.type_curves_widget.setLabel('left', 'Дебит, м³/сут')
-    # app.type_curves_widget.setLabel('bottom', 'Время, ч')
+    app.type_curves_widget.setLabel('left', 'Дебит, м³/сут')
+    app.type_curves_widget.setLabel('bottom', 'Время, ч')
 
     layout.addWidget(app.type_curves_widget)
 
@@ -97,25 +96,29 @@ def setup_type_curves_tab(app: 'MyApp') -> None:
 # Таблица данных (вкладка уже есть в .ui)
 # ------------------------------------------------------------------
 
-def setup_data_tab(app: 'MyApp') -> None:
-    """
-    Наполнение вкладки "Загруженные данные"
-    """
+# def setup_data_tab(app: 'MyApp') -> None:
+#     """
+#     Наполнение вкладки "Загруженные данные"
+#     """
 
-    data_tab = app.findChild(QWidget, "data_tab")
-    if data_tab is None:
-        # если вкладку временно уберёшь из .ui — код не упадёт
-        return
+#     data_table = app.findChild(QWidget, "data_table_placeholder")
+#     if data_table is None:
+#         # если вкладку временно уберёшь из .ui — код не упадёт
+#         return
 
-    layout = data_tab.layout()
-    if layout is None:
-        layout = QVBoxLayout(data_tab)
+#     layout = data_table.layout()
+#     if layout is None:
+#         layout = QVBoxLayout(data_table)
+#     layout.removeWidget(data_table)
+#     # data_table.deleteLater()
 
-    app.data_table = QTableView()
-    app.data_table.setAlternatingRowColors(True)
-    app.data_table.setSelectionBehavior(
-        QTableView.SelectionBehavior.SelectRows
-    )
-    app.data_table.horizontalHeader().setStretchLastSection(True)
+#     app.data_table = QTableView()
+#     app.data_table.setAlternatingRowColors(True)
+#     app.data_table.setSelectionBehavior(
+#         QTableView.SelectionBehavior.SelectRows
+#     )
+#     app.data_table.horizontalHeader().setStretchLastSection(True)
 
-    layout.addWidget(app.data_table)
+#     layout.addWidget(app.data_table)
+#     # layout.removeWidget(app.data_table)
+

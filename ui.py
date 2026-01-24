@@ -16,10 +16,10 @@ from PySide6.QtGui import (QBrush, QColor, QConicalGradient, QCursor,
     QImage, QKeySequence, QLinearGradient, QPainter,
     QPalette, QPixmap, QRadialGradient, QTransform)
 from PySide6.QtWidgets import (QApplication, QCheckBox, QComboBox, QDoubleSpinBox,
-    QGridLayout, QGroupBox, QHBoxLayout, QLabel,
-    QLayout, QMainWindow, QPushButton, QSizePolicy,
-    QSpinBox, QStatusBar, QTabWidget, QTextEdit,
-    QVBoxLayout, QWidget)
+    QGridLayout, QGroupBox, QHBoxLayout, QHeaderView,
+    QLabel, QLayout, QMainWindow, QPushButton,
+    QSizePolicy, QSpinBox, QStatusBar, QTabWidget,
+    QTableView, QTextEdit, QVBoxLayout, QWidget)
 
 class Ui_MainWindow(object):
     def setupUi(self, MainWindow):
@@ -29,8 +29,8 @@ class Ui_MainWindow(object):
         MainWindow.resize(1920, 1080)
         self.centralwidget = QWidget(MainWindow)
         self.centralwidget.setObjectName(u"centralwidget")
-        self.horizontalLayout_4 = QHBoxLayout(self.centralwidget)
-        self.horizontalLayout_4.setObjectName(u"horizontalLayout_4")
+        self.horizontalLayout_8 = QHBoxLayout(self.centralwidget)
+        self.horizontalLayout_8.setObjectName(u"horizontalLayout_8")
         self.verticalLayout = QVBoxLayout()
         self.verticalLayout.setObjectName(u"verticalLayout")
         self.horizontalLayout = QHBoxLayout()
@@ -229,7 +229,7 @@ class Ui_MainWindow(object):
         self.verticalLayout.addWidget(self.report_group)
 
 
-        self.horizontalLayout_4.addLayout(self.verticalLayout)
+        self.horizontalLayout_8.addLayout(self.verticalLayout)
 
         self.tab_widget = QTabWidget(self.centralwidget)
         self.tab_widget.setObjectName(u"tab_widget")
@@ -342,7 +342,7 @@ class Ui_MainWindow(object):
         self.verticalLayout_7.setObjectName(u"verticalLayout_7")
         self.groupBox = QGroupBox(self.dimensionless_gbox)
         self.groupBox.setObjectName(u"groupBox")
-        sizePolicy6 = QSizePolicy(QSizePolicy.Policy.Maximum, QSizePolicy.Policy.Preferred)
+        sizePolicy6 = QSizePolicy(QSizePolicy.Policy.Minimum, QSizePolicy.Policy.Preferred)
         sizePolicy6.setHorizontalStretch(0)
         sizePolicy6.setVerticalStretch(0)
         sizePolicy6.setHeightForWidth(self.groupBox.sizePolicy().hasHeightForWidth())
@@ -395,8 +395,11 @@ class Ui_MainWindow(object):
 
         self.groupBox_4 = QGroupBox(self.dimensionless_gbox)
         self.groupBox_4.setObjectName(u"groupBox_4")
-        sizePolicy6.setHeightForWidth(self.groupBox_4.sizePolicy().hasHeightForWidth())
-        self.groupBox_4.setSizePolicy(sizePolicy6)
+        sizePolicy7 = QSizePolicy(QSizePolicy.Policy.Maximum, QSizePolicy.Policy.Preferred)
+        sizePolicy7.setHorizontalStretch(0)
+        sizePolicy7.setVerticalStretch(0)
+        sizePolicy7.setHeightForWidth(self.groupBox_4.sizePolicy().hasHeightForWidth())
+        self.groupBox_4.setSizePolicy(sizePolicy7)
         self.verticalLayout_6 = QVBoxLayout(self.groupBox_4)
         self.verticalLayout_6.setObjectName(u"verticalLayout_6")
         self.cb_gfunc = QCheckBox(self.groupBox_4)
@@ -441,6 +444,23 @@ class Ui_MainWindow(object):
         self.vboxLayout.addWidget(self.dimensionless_gbox)
 
         self.tab_widget.addTab(self.timeseries_tab, "")
+        self.data_tab = QWidget()
+        self.data_tab.setObjectName(u"data_tab")
+        self.verticalLayout_8 = QVBoxLayout(self.data_tab)
+        self.verticalLayout_8.setObjectName(u"verticalLayout_8")
+        self.data_table = QTableView(self.data_tab)
+        self.data_table.setObjectName(u"data_table")
+
+        self.verticalLayout_8.addWidget(self.data_table)
+
+        self.data_info_label = QLabel(self.data_tab)
+        self.data_info_label.setObjectName(u"data_info_label")
+        sizePolicy5.setHeightForWidth(self.data_info_label.sizePolicy().hasHeightForWidth())
+        self.data_info_label.setSizePolicy(sizePolicy5)
+
+        self.verticalLayout_8.addWidget(self.data_info_label)
+
+        self.tab_widget.addTab(self.data_tab, "")
         self.grp_tab = QWidget()
         self.grp_tab.setObjectName(u"grp_tab")
         self.vboxLayout1 = QVBoxLayout(self.grp_tab)
@@ -448,36 +468,63 @@ class Ui_MainWindow(object):
         self.tab_widget.addTab(self.grp_tab, "")
         self.type_curves_tab = QWidget()
         self.type_curves_tab.setObjectName(u"type_curves_tab")
-        self.vboxLayout2 = QVBoxLayout(self.type_curves_tab)
-        self.vboxLayout2.setObjectName(u"vboxLayout2")
+        self.verticalLayout_9 = QVBoxLayout(self.type_curves_tab)
+        self.verticalLayout_9.setObjectName(u"verticalLayout_9")
+        self.horizontalLayout_4 = QHBoxLayout()
+        self.horizontalLayout_4.setObjectName(u"horizontalLayout_4")
+        self.linear_btn = QPushButton(self.type_curves_tab)
+        self.linear_btn.setObjectName(u"linear_btn")
+
+        self.horizontalLayout_4.addWidget(self.linear_btn)
+
+        self.bilinear_btn = QPushButton(self.type_curves_tab)
+        self.bilinear_btn.setObjectName(u"bilinear_btn")
+
+        self.horizontalLayout_4.addWidget(self.bilinear_btn)
+
+        self.pseudoradial_btn = QPushButton(self.type_curves_tab)
+        self.pseudoradial_btn.setObjectName(u"pseudoradial_btn")
+
+        self.horizontalLayout_4.addWidget(self.pseudoradial_btn)
+
+        self.match_curves_btn = QPushButton(self.type_curves_tab)
+        self.match_curves_btn.setObjectName(u"match_curves_btn")
+
+        self.horizontalLayout_4.addWidget(self.match_curves_btn)
+
+
+        self.verticalLayout_9.addLayout(self.horizontalLayout_4)
+
         self.type_curves_plot_placeholder = QWidget(self.type_curves_tab)
         self.type_curves_plot_placeholder.setObjectName(u"type_curves_plot_placeholder")
+        sizePolicy3.setHeightForWidth(self.type_curves_plot_placeholder.sizePolicy().hasHeightForWidth())
+        self.type_curves_plot_placeholder.setSizePolicy(sizePolicy3)
 
-        self.vboxLayout2.addWidget(self.type_curves_plot_placeholder)
+        self.verticalLayout_9.addWidget(self.type_curves_plot_placeholder)
 
         self.tab_widget.addTab(self.type_curves_tab, "")
         self.results_tab = QWidget()
         self.results_tab.setObjectName(u"results_tab")
-        self.vboxLayout3 = QVBoxLayout(self.results_tab)
-        self.vboxLayout3.setObjectName(u"vboxLayout3")
+        self.vboxLayout2 = QVBoxLayout(self.results_tab)
+        self.vboxLayout2.setObjectName(u"vboxLayout2")
         self.results_text = QTextEdit(self.results_tab)
         self.results_text.setObjectName(u"results_text")
-        sizePolicy7 = QSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Preferred)
-        sizePolicy7.setHorizontalStretch(0)
-        sizePolicy7.setVerticalStretch(0)
-        sizePolicy7.setHeightForWidth(self.results_text.sizePolicy().hasHeightForWidth())
-        self.results_text.setSizePolicy(sizePolicy7)
+        sizePolicy8 = QSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Preferred)
+        sizePolicy8.setHorizontalStretch(0)
+        sizePolicy8.setVerticalStretch(0)
+        sizePolicy8.setHeightForWidth(self.results_text.sizePolicy().hasHeightForWidth())
+        self.results_text.setSizePolicy(sizePolicy8)
 
-        self.vboxLayout3.addWidget(self.results_text)
+        self.vboxLayout2.addWidget(self.results_text)
 
         self.export_report_btn = QPushButton(self.results_tab)
         self.export_report_btn.setObjectName(u"export_report_btn")
 
-        self.vboxLayout3.addWidget(self.export_report_btn)
+        self.vboxLayout2.addWidget(self.export_report_btn)
 
         self.tab_widget.addTab(self.results_tab, "")
 
-        self.horizontalLayout_4.addWidget(self.tab_widget)
+        self.horizontalLayout_8.addWidget(self.tab_widget)
 
         MainWindow.setCentralWidget(self.centralwidget)
         self.statusbar = QStatusBar(MainWindow)
@@ -486,7 +533,7 @@ class Ui_MainWindow(object):
 
         self.retranslateUi(MainWindow)
 
-        self.tab_widget.setCurrentIndex(0)
+        self.tab_widget.setCurrentIndex(3)
 
 
         QMetaObject.connectSlotsByName(MainWindow)
@@ -541,7 +588,13 @@ class Ui_MainWindow(object):
         self.cb_type_cinco.setText(QCoreApplication.translate("MainWindow", u"\u0411\u0438\u043b\u0438\u043d\u0435\u0439\u043d\u044b\u0439 \u0440\u0435\u0436\u0438\u043c", None))
         self.cb_type_valko.setText(QCoreApplication.translate("MainWindow", u"\u041f\u0441\u0435\u0432\u0434\u043e\u0440\u0430\u0434\u0438\u0430\u043b\u044c\u043d\u044b\u0439 \u0440\u0435\u0436\u0438\u043c", None))
         self.tab_widget.setTabText(self.tab_widget.indexOf(self.timeseries_tab), QCoreApplication.translate("MainWindow", u"\u041e\u043f\u0435\u0440\u0430\u0446\u0438\u0438 \u0438 \u0433\u0440\u0430\u0444\u0438\u043a\u0438", None))
+        self.data_info_label.setText(QCoreApplication.translate("MainWindow", u"\u0414\u0430\u043d\u043d\u044b\u0435 \u0441\u043a\u0432\u0430\u0436\u0438\u043d\u044b \u0435\u0449\u0435 \u043d\u0435 \u0437\u0430\u0433\u0440\u0443\u0436\u0435\u043d\u044b", None))
+        self.tab_widget.setTabText(self.tab_widget.indexOf(self.data_tab), QCoreApplication.translate("MainWindow", u"\u0422\u0430\u0431\u043b\u0438\u0447\u043d\u043e\u0435 \u043f\u0440\u0435\u0434\u0441\u0442\u0430\u0432\u043b\u0435\u043d\u0438\u0435", None))
         self.tab_widget.setTabText(self.tab_widget.indexOf(self.grp_tab), QCoreApplication.translate("MainWindow", u"\u0410\u043d\u0430\u043b\u0438\u0437 \u0413\u0420\u041f", None))
+        self.linear_btn.setText(QCoreApplication.translate("MainWindow", u"\u041b\u0438\u043d\u0435\u0439\u043d\u043e\u0435 \u0442\u0435\u0447\u0435\u043d\u0438\u0435", None))
+        self.bilinear_btn.setText(QCoreApplication.translate("MainWindow", u"\u0411\u0438\u043b\u0438\u043d\u0435\u0439\u043d\u043e\u0435 \u0442\u0435\u0447\u0435\u043d\u0438\u0435", None))
+        self.pseudoradial_btn.setText(QCoreApplication.translate("MainWindow", u"\u041f\u0441\u0435\u0432\u0434\u043e\u0440\u0430\u0434\u0438\u0430\u043b\u044c\u043d\u043e\u0435 \u0442\u0435\u0447\u0435\u043d\u0438\u0435", None))
+        self.match_curves_btn.setText(QCoreApplication.translate("MainWindow", u"\u0421\u043e\u043f\u043e\u0441\u0442\u0430\u0432\u0438\u0442\u044c \u0441 \u0434\u0430\u043d\u043d\u044b\u043c\u0438", None))
         self.tab_widget.setTabText(self.tab_widget.indexOf(self.type_curves_tab), QCoreApplication.translate("MainWindow", u"\u042d\u0442\u0430\u043b\u043e\u043d\u043d\u044b\u0435 \u043a\u0440\u0438\u0432\u044b\u0435", None))
         self.export_report_btn.setText(QCoreApplication.translate("MainWindow", u"\u042d\u043a\u0441\u043f\u043e\u0440\u0442 \u043e\u0442\u0447\u0435\u0442\u0430", None))
         self.tab_widget.setTabText(self.tab_widget.indexOf(self.results_tab), QCoreApplication.translate("MainWindow", u"\u0420\u0435\u0437\u0443\u043b\u044c\u0442\u0430\u0442\u044b", None))
