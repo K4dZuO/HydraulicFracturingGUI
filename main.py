@@ -1,5 +1,5 @@
 from PySide6.QtWidgets import (QLabel, QTableView, QApplication, QMainWindow, QFileDialog, QMessageBox, 
-                               QComboBox, QSpinBox, QPushButton, QWidget, QVBoxLayout, 
+                               QComboBox, QSpinBox, QPushButton, QWidget, QVBoxLayout, QHeaderView,                               
                                QHBoxLayout, QTabWidget, QTextEdit, QGroupBox, QGridLayout, QDialog,
                                QDialogButtonBox)
 from PySide6.QtCore import Qt, QTimer
@@ -20,7 +20,7 @@ from helpers.parse_well_data import parse_well_data
 from helpers.ml_methods import (detect_outliers)
 from helpers.dimensionless_analysis import convert_to_dimensionless_curves, fit_xy_curve_coefficients
 from helpers.dimensionless.filtration import SignalFilters, PhysicsConstraints, compute_snr
-from helpers.dimensionless_plotting import plot_dimensionless_grouped
+from helpers.graphics_plotting import plot_dimensionless_grouped, plot_real_time_series
 from helpers.dimensionless.filtration.utils import select_filter_method
 from helpers.dimensionless_interpolating import DimensionlessCurveInterpolator
 from helpers.quadratic_regression_model import QuadraticRegressionModel
@@ -30,14 +30,8 @@ from helpers.grp_analysis import analyze_flow_regime, compute_productivity_index
 from schemas.well_data import WellTimeSeries
 
 from helpers.input_test import diag_dimensional
-from helpers.ui_setup import (
-    setup_interface,
-    # setup_timeseries_tab,
-    # setup_grp_tab,
-    # setup_type_curves_tab,
-    # setup_results_tab,
-    # setup_data_tab
-)
+from helpers.ui_setup import setup_interface
+from helpers.utils import get_filename
 
 # Импорт констант из config.py
 from config import (
@@ -1707,12 +1701,10 @@ class MyApp(QMainWindow, Ui_MainWindow):
     def setup_event_handlers(self) -> None:
         """Настройка обработчиков событий"""
         # Временные ряды
-        # self.plot_btn.clicked.connect(self.on_plot_dimensionless_selected)
         self.interp_btn.clicked.connect(self.on_interpolate_data)
         self.ml_filter_btn.clicked.connect(self.on_ml_filter)
         self.outlier_btn.clicked.connect(self.on_detect_outliers)
         self.export_btn.clicked.connect(self.on_export_data)
-        # self.load_validation_button.clicked.connect(self.load_validation_file)
         self.extrapolate_btn.clicked.connect(self.on_extrapolate_xy)
         self.fit_xy_btn.clicked.connect(self.on_fit_xy_curve)
         
@@ -1745,13 +1737,11 @@ class MyApp(QMainWindow, Ui_MainWindow):
         self.cb_type_valko.stateChanged.connect(self.on_checkbox_toggled)
         self.cb_gfunc.stateChanged.connect(self.on_checkbox_toggled)
         self.cb_mbt.stateChanged.connect(self.on_checkbox_toggled)
-        self.cb_real_p.stateChanged.connect(self.on_checkbox_toggled)
-        self.cb_real_q.stateChanged.connect(self.on_checkbox_toggled)
         
         # # Анализ ГРП
-        # self.flow_regime_btn.clicked.connect(self.on_analyze_flow_regime)
-        # self.productivity_btn.clicked.connect(self.on_compute_productivity_index)
-        # self.transitions_btn.clicked.connect(self.on_detect_flow_regime_transitions)
+        self.flow_regime_btn.clicked.connect(self.on_analyze_flow_regime)
+        self.productivity_btn.clicked.connect(self.on_compute_productivity_index)
+        self.transitions_btn.clicked.connect(self.on_detect_flow_regime_transitions)
         
         # Эталонные кривые
         self.bilinear_btn.clicked.connect(self.on_plot_bilinear)
@@ -1762,7 +1752,6 @@ class MyApp(QMainWindow, Ui_MainWindow):
         # Результаты
         self.export_report_btn.clicked.connect(self.on_export_report)
 
-        self.tab_widget.addTab(self.data_tab, "Загруженные данные")
 
     def _load_data_file(self, target: str = 'main') -> None:
         """
@@ -1807,7 +1796,7 @@ class MyApp(QMainWindow, Ui_MainWindow):
             self.update_well_selection()
             
             # # Обновляем отображение параметров ГРП
-            # self.update_grp_parameters()
+            self.update_grp_parameters()
             
             # Обновляем вкладку с загруженными данными
             self.update_data_tab()
@@ -1816,6 +1805,9 @@ class MyApp(QMainWindow, Ui_MainWindow):
             current_item = self.current_data
             if current_item:
                 self.update_interface_parameters()
+            
+            filename = get_filename(file_path)
+            self.load_file_label.setText(filename)
             
             # Показываем информацию о загруженных данных
             total_points = sum(len(item.time) for item in data)
@@ -1830,7 +1822,7 @@ class MyApp(QMainWindow, Ui_MainWindow):
             # Обновляем комбо в новой вкладке
             self.well_combo_dim.clear()
             for i, item in enumerate(self.loaded_data):
-                self.well_combo_dim.addItem(f"Скважина {i+1} (Skin={item.skin:.2f})")
+                self.well_combo_dim.addItem(f"Скважина {i+1} (Skin={item.skin:.3f}), N={item.fractures_count:.3f}, a/L={item.a_l_ratio:.3f})")
         else:  # target == 'validation'
             self.validation_data = data
             
@@ -1844,6 +1836,7 @@ class MyApp(QMainWindow, Ui_MainWindow):
     def load_template(self) -> None:
         """Загрузка CSV файла с данными разведки месторождений"""
         self._load_data_file(target='main')
+        self.update_real_data_graphics()
 
     def load_validation_file(self) -> None:
         """Загрузка файла для проверки качества интерполяции (эталонные данные)"""
@@ -1938,6 +1931,7 @@ class MyApp(QMainWindow, Ui_MainWindow):
                 model.setItem(row, col, item)
 
         self.data_table.setModel(model)
+        self.data_table.horizontalHeader().setSectionResizeMode(QHeaderView.ResizeMode.Stretch)
         self.data_info_label.setText(f"Отображены данные скважины {self.current_index + 1} — {len(df)} строк")
 
     def update_well_selection(self) -> None:
@@ -1945,7 +1939,7 @@ class MyApp(QMainWindow, Ui_MainWindow):
         self.well_combo_dim.clear()
         
         for i, item in enumerate(self.loaded_data):
-            item_name = f"Скважина {i+1} (Skin={item.skin:.3f}, N={item.fractures_count}, a/L={item.a_l_ratio})"
+            item_name = f"Скважина {i+1} (Skin={item.skin:.3f}, N={item.fractures_count:.3f}, a/L={item.a_l_ratio:.3f})"
             self.well_combo_dim.addItem(item_name)
         
         if self.loaded_data:
@@ -2054,6 +2048,7 @@ class MyApp(QMainWindow, Ui_MainWindow):
                 self.results_text.setPlainText(report)
             
             self.on_plot_dimensionless_selected()
+            self.update_real_data_graphics()
             
             # Показываем информационное сообщение
             method_names = {
@@ -2080,7 +2075,6 @@ class MyApp(QMainWindow, Ui_MainWindow):
     def reset_plots(self) -> None:
         """Сброс всех графиков и чекбоксов"""
         # Очищаем график
-        # if hasattr(self, 'dim_plot'):
         self.dim_plot.clear()
         self.dim_plot.setLabel('bottom', 'X (безразмерный фильтрационный параметр)')
         self.dim_plot.setLabel('left', 'Безразмерный параметр')
@@ -2110,10 +2104,6 @@ class MyApp(QMainWindow, Ui_MainWindow):
             self.cb_gfunc.setChecked(False)
         if hasattr(self, 'cb_mbt'):
             self.cb_mbt.setChecked(False)
-        if hasattr(self, 'cb_real_p'):
-            self.cb_real_p.setChecked(False)
-        if hasattr(self, 'cb_real_q'):
-            self.cb_real_q.setChecked(False)
         
         # Очищаем отчёт
         if hasattr(self, 'text_report'):
@@ -2183,6 +2173,8 @@ class MyApp(QMainWindow, Ui_MainWindow):
             
             # Перестраиваем график с наложением экстраполяции
             self.on_plot_dimensionless_selected()
+            self.update_real_data_graphics()
+            
             
             # Формируем и выводим отчёт об экстраполяции
             extrapolation_report = self._create_extrapolation_report(result)
@@ -2373,6 +2365,7 @@ class MyApp(QMainWindow, Ui_MainWindow):
             
             # Перестраиваем график с подогнанными данными
             self.on_plot_dimensionless_selected()
+            self.update_real_data_graphics()
             
             c_val = fit_result.get('c', 0.0)
             model_info = ""
@@ -2398,6 +2391,18 @@ class MyApp(QMainWindow, Ui_MainWindow):
             import traceback
             self.show_warning("Ошибка подгонки", 
                             f"Не удалось выполнить подгонку: {str(e)}\n{traceback.format_exc()}")
+    
+    def update_real_data_graphics(self) -> None:
+        plot_real_time_series(plot_widget=self.p_graphic,
+                              time=self.current_data.time,
+                              values=self.current_data.pressure,
+                              kind = "pressure",
+                              )
+        plot_real_time_series(plot_widget=self.q_graphic,
+                              time=self.current_data.time,
+                              values=self.current_data.flow_rate,
+                              kind = "debit",
+                              )
     
     def on_plot_dimensionless_selected(self) -> None:
         """Обработка нажатия на кнопку 'Построить график'."""
@@ -2444,10 +2449,6 @@ class MyApp(QMainWindow, Ui_MainWindow):
 
             # 2️⃣ Определяем, какие группы графиков выбраны
             checked_groups = {
-                # Реальные параметры
-                'real_params': self.cb_real_p.isChecked() or self.cb_real_q.isChecked(),
-                'cb_real_p': self.cb_real_p.isChecked(),
-                'cb_real_q': self.cb_real_q.isChecked(),
                 
                 # Безразмерные кривые
                 'dimensionless': (self.cb_dim_pD.isChecked() or self.cb_dim_dpD.isChecked() or 
@@ -2672,11 +2673,12 @@ class MyApp(QMainWindow, Ui_MainWindow):
         except Exception as e:
             self.text_report.setText(f"Ошибка построения графика: {str(e)}")
             import traceback
-            print(traceback.format_exc())      
 
     def on_checkbox_toggled(self):
         """Вызывается при изменении состояния любого чекбокса"""
-        self.on_plot_dimensionless_selected() 
+        self.on_plot_dimensionless_selected()
+        self.update_real_data_graphics()
+                
 
     def on_ml_filter(self) -> None:
         """ML-фильтрация данных - применяется к исходным P, Q, dP"""
@@ -2884,8 +2886,10 @@ class MyApp(QMainWindow, Ui_MainWindow):
             report = self._create_filter_report()
             self.text_report.setText(report)
             
-            # Обновляем график
+            # Обновляем графики
             self.on_plot_dimensionless_selected()
+            self.update_real_data_graphics()
+            
             
             # Показываем информационное сообщение
             quality = self._get_quality_label(rmse)
@@ -2956,6 +2960,8 @@ class MyApp(QMainWindow, Ui_MainWindow):
             
             # Обновляем график
             self.on_plot_dimensionless_selected()
+            self.update_real_data_graphics()
+            
         except Exception as e:
             self.show_warning("Ошибка", f"Ошибка обнаружения выбросов: {str(e)}")
     
@@ -3016,25 +3022,53 @@ class MyApp(QMainWindow, Ui_MainWindow):
 
         self.show_info("Индекс продуктивности", result_text)
 
+
     def on_detect_flow_regime_transitions(self) -> None:
-        """Обнаружение переходов режимов"""
+        """Обнаружение переходов режимов течения"""
         if self.current_data is None:
             return
 
         transitions = detect_flow_regime_transitions(self.current_data)
 
-        if transitions:
-            result_text = f"Найдено {len(transitions)} переходов режимов течения:\n\n"
-            for i, trans in enumerate(transitions, 1):
-                result_text += f"Переход {i}:\n"
-                result_text += f"Время: {trans['time']:.2f} ч\n"
-                result_text += f"Давление: {trans['pressure']:.2f} атм\n"
-                result_text += f"Дебит: {trans['flow_rate']:.2f} м³/сут\n"
-                result_text += f"Изменение производной: {trans['derivative_change']:.4f}\n\n"
-        else:
-            result_text = "Переходы режимов течения не обнаружены"
+        if not transitions:
+            self.show_info(
+                "Переходы режимов",
+                "Переходы режимов течения не обнаружены"
+            )
+            return
 
-        self.show_info("Переходы режимов", result_text)
+        # ---------- Формирование текста отчёта ----------
+        lines = []
+        lines.append(f"Найдено переходов режимов течения: {len(transitions)}")
+        lines.append("=" * 50)
+
+        for i, trans in enumerate(transitions, 1):
+            lines.append(f"\nПереход {i}")
+            lines.append(f"Время: {trans['time']:.2f} ч")
+            lines.append(f"Давление: {trans['pressure']:.2f} атм")
+            lines.append(f"Дебит: {trans['flow_rate']:.2f} м³/сут")
+            lines.append(
+                f"Изменение производной: {trans['derivative_change']:.4e}"
+            )
+
+        result_text = "\n".join(lines)
+
+        # ---------- Диалог с прокруткой ----------
+        dialog = QDialog(self)
+        dialog.setWindowTitle("Переходы режимов течения")
+        dialog.resize(700, 500)
+
+        layout = QVBoxLayout(dialog)
+
+        text_edit = QTextEdit(dialog)
+        text_edit.setReadOnly(True)
+        text_edit.setPlainText(result_text)
+        text_edit.setLineWrapMode(QTextEdit.NoWrap)
+
+        layout.addWidget(text_edit)
+
+
+        dialog.exec()
 
     def on_plot_bilinear(self) -> None:
         """Построение кривой билинейного течения"""

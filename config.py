@@ -3,8 +3,8 @@
 """
 
 # Размеры окна
-WINDOW_WIDTH = 1400
-WINDOW_HEIGHT = 900
+WINDOW_WIDTH = 1920
+WINDOW_HEIGHT = 1080
 
 # Геометрия виджетов
 TAB_WIDGET_X = 350

@@ -7,13 +7,75 @@ import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
 from matplotlib.figure import Figure
-from typing import Dict, List, Tuple, Optional, Union
+from typing import Dict, List, Tuple, Optional, Union, Literal
 import pyqtgraph as pg
 from pyqtgraph import PlotWidget, mkPen, mkBrush
 from helpers.dimensionless_analysis import (
     DimensionlessParameters, 
 )
 
+
+
+def plot_real_time_series(
+    plot_widget: PlotWidget,
+    time: pd.Series,
+    values: pd.Series,
+    kind: Literal["pressure", "debit"],
+    clear: bool = True,
+) -> None:
+    """
+    Универсальная функция отображения реальных данных скважины:
+    - Давление P(t)
+    - Дебит Q(t)
+
+    Args:
+        plot_widget: pyqtgraph PlotWidget
+        time: временной ряд (часы)
+        values: значения давления или дебита
+        kind: "pressure" | "debit"
+        clear: очищать ли график перед построением
+    """
+
+    if clear:
+        plot_widget.clear()
+
+    # Базовая настройка осей
+    plot_widget.setLogMode(x=False, y=False)
+    plot_widget.setLabel("bottom", "Время, ч")
+    plot_widget.showGrid(x=True, y=True)
+
+    # Выбор параметров по типу
+    if kind == "pressure":
+        plot_widget.setTitle("График давления")
+        y_label = "Давление, атм"
+        color = (200, 50, 50)
+        name = "P(t)"
+    elif kind == "debit":
+        plot_widget.setTitle("График дебита")
+        y_label = "Дебит, м³/сут"
+        color = (50, 150, 50)
+        name = "Q(t)"
+    else:
+        raise ValueError(f"Неизвестный тип графика: {kind}")
+
+    plot_widget.setLabel("left", y_label)
+
+    # Приведение к numpy и защита от NaN
+    x = time.values
+    y = values.values
+
+    mask = pd.notna(x) & pd.notna(y)
+    if not mask.any():
+        return
+
+    plot_widget.plot(
+        x[mask],
+        y[mask],
+        pen=pg.mkPen(color=color, width=2),
+        name=name,
+        connect="finite",
+    )
+    return
 
 def plot_dimensionless_grouped(plot_widget: PlotWidget,
                                dim_data: DimensionlessParameters,
@@ -58,36 +120,7 @@ def plot_dimensionless_grouped(plot_widget: PlotWidget,
     pD = dim_data.pressure / (dim_data.delta_p_i if dim_data.delta_p_i != 0 else 1.0)
     qD = dim_data.flow_rate / (dim_data.Q if dim_data.Q != 0 else 1.0)
     
-    # ГРУППА 1: Реальные параметры - плоскость (t, P) или (t, Q)
-    # Обычные оси (не логарифмические)
-    if has_real:
-        plot_widget.setLogMode(x=False, y=False)
-        plot_widget.setLabel('bottom', 'Время, ч')
-        
-        if checked_groups.get('cb_real_p', False):
-            plot_widget.setLabel('left', 'Давление, атм')
-            # Используем connect='finite' для правильного отображения пропусков
-            plot_widget.plot(time.values, pressure.values,
-                            pen=pg.mkPen(color=(200, 50, 50), width=2),
-                            name="P(t)", 
-                            connect='finite')
-        
-        if checked_groups.get('cb_real_q', False):
-            if checked_groups.get('cb_real_p', False):
-                # Если уже есть давление, используем правую ось или переключаем
-                plot_widget.setLabel('left', 'Давление / Дебит')
-            else:
-                plot_widget.setLabel('left', 'Дебит, м³/сут')
-            # Используем connect='finite' для правильного отображения пропусков
-            plot_widget.plot(time.values, flow_rate.values,
-                            pen=pg.mkPen(color=(50, 150, 50), width=2),
-                            name="Q(t)", 
-                            connect='finite')
-        
-        plot_widget.setTitle("Реальные параметры скважины")
-        plot_widget.addLegend()
-        return  # Реальные параметры в своем пространстве
-    
+  
     # ГРУППА 2: Безразмерные кривые - плоскость (X, pD/qD/tD/CD)
     # Все безразмерные кривые отображаются в плоскости X-Y
     if has_dim:
