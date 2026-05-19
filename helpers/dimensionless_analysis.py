@@ -288,15 +288,19 @@ def fit_xy_curve_coefficients(
         a = 1.0
     else:
         # OLS для X: X_fit = a * X_calc
-        # Интерполируем X_calc на сетку X_data_clean для подгонки
-        if X_calc_unique is not None:
-            X_calc_for_fit = np.interp(X_data_clean, X_calc_unique, X_calc_unique)
+        # Используем попарное сравнение очищенных X_data и X_calc.
+        # Важно: np.interp(..., X_calc, X_calc) почти тождественен и искажает оценку масштаба a.
+        if len(X_calc_clean) != len(X_data_clean):
+            min_len = min(len(X_calc_clean), len(X_data_clean))
+            X_calc_for_fit = X_calc_clean[:min_len]
+            X_data_for_fit = X_data_clean[:min_len]
         else:
-            X_calc_for_fit = X_calc_clean[:len(X_data_clean)] if len(X_calc_clean) > len(X_data_clean) else X_calc_clean
+            X_calc_for_fit = X_calc_clean
+            X_data_for_fit = X_data_clean
         
-        if len(X_calc_for_fit) > 0 and len(X_calc_for_fit) == len(X_data_clean) and np.any(X_calc_for_fit != 0):
+        if len(X_calc_for_fit) > 0 and len(X_calc_for_fit) == len(X_data_for_fit) and np.any(X_calc_for_fit != 0):
             # Используем метод наименьших квадратов: a = (X_data^T * X_calc) / (X_calc^T * X_calc)
-            a = np.dot(X_data_clean, X_calc_for_fit) / np.dot(X_calc_for_fit, X_calc_for_fit)
+            a = np.dot(X_data_for_fit, X_calc_for_fit) / np.dot(X_calc_for_fit, X_calc_for_fit)
             if not np.isfinite(a):
                 a = 1.0
         else:
